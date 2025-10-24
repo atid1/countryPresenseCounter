@@ -12,24 +12,24 @@ export default function Login() {
   const [ok, setOk] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+  const base = isLocalhost
+    ? "http://localhost:3000"
+    : "https://country-presense-counter.vercel.app"; // project domain only in prod
+
+  const emailRedirectTo = `${base}/api/auth/callback?redirect_to=/trips`;
+
   async function sendMagic() {
     setOk(null); setErr(null);
 
-    // ✅ Always use production project domain in prod; localhost in dev.
-    //    This avoids preview URLs entirely for auth emails.
-    const isLocalhost =
-      typeof window !== "undefined" &&
-      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-
-    const base = isLocalhost
-      ? "http://localhost:3000"
-      : "https://country-presense-counter.vercel.app"; // <-- your project domain
-
-    const redirect = `${base}/api/auth/callback?redirect_to=/trips`;
+    console.log("Sending magic link with redirect:", emailRedirectTo);
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: redirect }
+      options: { emailRedirectTo }
     });
 
     if (error) setErr(error.message);
@@ -47,6 +47,9 @@ export default function Login() {
         style={{ width: "100%", padding: 8, marginBottom: 10 }}
       />
       <button onClick={sendMagic}>Send Magic Link</button>
+      <p style={{fontSize:12, color:"#666", marginTop:8}}>
+        Emails will redirect to: <code>{emailRedirectTo}</code>
+      </p>
       {ok && <p style={{ color: "green" }}>{ok}</p>}
       {err && <p style={{ color: "red" }}>{err}</p>}
     </main>
