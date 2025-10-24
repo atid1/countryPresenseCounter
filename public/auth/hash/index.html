@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Completing sign-in…</title>
+
+<body style="font-family: system-ui; padding: 16px">
+	Completing sign-in…
+	<script>
+		(async () => {
+			try {
+				const url = new URL(window.location.href);
+				const redirect_to = url.searchParams.get("redirect_to") || "/trips";
+
+				// Parse fragment: #access_token=...&refresh_token=...
+				const h = new URLSearchParams(window.location.hash.slice(1));
+				const access_token = h.get("access_token");
+				const refresh_token = h.get("refresh_token");
+
+				if (access_token && refresh_token) {
+					const res = await fetch("/api/auth/set-session", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ access_token, refresh_token }),
+						credentials: "same-origin"
+					});
+					// give the browser a blink to write cookies before navigating
+					await new Promise((r) => setTimeout(r, 150));
+					window.location.replace(redirect_to);
+					return;
+				}
+
+				// Fallback: if Supabase sends query params instead of hash
+				if (url.searchParams.get("code") || url.searchParams.get("token")) {
+					window.location.replace(`/api/auth/callback${url.search}`);
+					return;
+				}
+
+				window.location.replace("/login?error=MissingTokens");
+			} catch (e) {
+				window.location.replace("/login?error=SetSessionFailed");
+			}
+		})();
+	</script>
+</body>
+
+</html>
