@@ -1,4 +1,4 @@
-# Dad Days Per Country - Minimal
+# Country Presence Counter - Minimal
 
 Minimal Next.js + Supabase + Prisma to track days per country.
 - Auth: Supabase (magic link/Google) via server checks
