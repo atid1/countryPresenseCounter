@@ -33,5 +33,22 @@ export default function Login() {
     else setOk("Check your email for a sign-in link.");
   }
 
-  return (/* form UI */);
+  return (
+  <main style={{ maxWidth: 400, margin: "4rem auto", fontFamily: "sans-serif" }}>
+    <h1>Login</h1>
+    <input
+      type="email"
+      placeholder="you@example.com"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
+    />
+    <button onClick={sendMagic} style={{ padding: "8px 16px" }}>
+      Send Magic Link
+    </button>
+
+    {ok && <p style={{ color: "green" }}>{ok}</p>}
+    {err && <p style={{ color: "red" }}>{err}</p>}
+  </main>
+);
 }
