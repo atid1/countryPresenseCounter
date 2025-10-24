@@ -19,7 +19,9 @@ export default function Login() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${location.origin}/api/auth/callback` }
+      options: {
+        emailRedirectTo: `${window.location.origin}/api/auth/callback`
+      }
     });
 
     if (error) setErr(error.message);

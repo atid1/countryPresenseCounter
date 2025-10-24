@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { requireUserId } from "@/src/lib/auth";
 import { parseTripsCsv } from "@/src/lib/csv";

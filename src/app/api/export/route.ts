@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { requireUserId } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
 
@@ -7,7 +9,7 @@ export async function GET() {
 
   const header = "FROM,TO,LOCATION,NOTES\n";
   const body = trips.map(t =>
-    `${t.dateFrom.toISOString().slice(0,10)},${t.dateTo.toISOString().slice(0,10)},${t.countryCode},"${(t.notes??"").replace(/"/g,'""')}"`
+    `${t.dateFrom.toISOString().slice(0, 10)},${t.dateTo.toISOString().slice(0, 10)},${t.countryCode},"${(t.notes ?? "").replace(/"/g, '""')}"`
   ).join("\n");
 
   return new Response(header + body, {

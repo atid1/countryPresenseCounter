@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { requireUserId } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
 

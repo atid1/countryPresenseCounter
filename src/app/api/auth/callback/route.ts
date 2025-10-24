@@ -1,3 +1,4 @@
+// src/app/api/auth/callback/route.ts
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/src/lib/supabase";
 
@@ -9,7 +10,6 @@ export async function GET(request: Request) {
 	const supabase = supabaseServer();
 
 	if (code) {
-		// This exchanges the code for a session AND sets the session cookies
 		const { error } = await supabase.auth.exchangeCodeForSession(code);
 		if (error) {
 			console.error("exchangeCodeForSession error:", error.message);
