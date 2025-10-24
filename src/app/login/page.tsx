@@ -10,12 +10,18 @@ const supabase = createClient(
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [ok, setOk] = useState<string| null>(null);
-  const [err, setErr] = useState<string| null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
   async function sendMagic() {
-    setOk(null); setErr(null);
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${location.origin}/` } });
+    setOk(null);
+    setErr(null);
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${location.origin}/api/auth/callback` }
+    });
+
     if (error) setErr(error.message);
     else setOk("Check your email for a sign-in link.");
   }
@@ -23,10 +29,14 @@ export default function Login() {
   return (
     <main>
       <h1>Login</h1>
-      <input placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)} />
+      <input
+        placeholder="you@example.com"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+      />
       <button onClick={sendMagic}>Send Magic Link</button>
-      {ok && <p style={{color:"green"}}>{ok}</p>}
-      {err && <p style={{color:"red"}}>{err}</p>}
+      {ok && <p style={{ color: "green" }}>{ok}</p>}
+      {err && <p style={{ color: "red" }}>{err}</p>}
     </main>
   );
 }
