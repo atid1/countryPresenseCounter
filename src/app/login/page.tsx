@@ -9,41 +9,46 @@ const supabase = createClient(
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [ok, setOk] = useState<string|null>(null);
-  const [err, setErr] = useState<string|null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
   async function sendMagic() {
     setOk(null); setErr(null);
 
-    const origin = window.location.origin; // prod: project domain; dev: localhost
+    // ✅ Always use production project domain in prod; localhost in dev.
+    //    This avoids preview URLs entirely for auth emails.
+    const isLocalhost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+    const base = isLocalhost
+      ? "http://localhost:3000"
+      : "https://country-presense-counter.vercel.app"; // <-- your project domain
+
+    const redirect = `${base}/api/auth/callback?redirect_to=/trips`;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: {
-        emailRedirectTo: `${origin}/api/auth/callback?redirect_to=/trips`
-      }
+      options: { emailRedirectTo: redirect }
     });
 
     if (error) setErr(error.message);
     else setOk("Check your email for a sign-in link.");
   }
-  
-  return (
-  <main style={{ maxWidth: 400, margin: "4rem auto", fontFamily: "sans-serif" }}>
-    <h1>Login</h1>
-    <input
-      type="email"
-      placeholder="you@example.com"
-      value={email}
-      onChange={(e) => setEmail(e.target.value)}
-      style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-    />
-    <button onClick={sendMagic} style={{ padding: "8px 16px" }}>
-      Send Magic Link
-    </button>
 
-    {ok && <p style={{ color: "green" }}>{ok}</p>}
-    {err && <p style={{ color: "red" }}>{err}</p>}
-  </main>
-);
+  return (
+    <main style={{ maxWidth: 420, margin: "4rem auto" }}>
+      <h1>Login</h1>
+      <input
+        type="email"
+        placeholder="you@example.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        style={{ width: "100%", padding: 8, marginBottom: 10 }}
+      />
+      <button onClick={sendMagic}>Send Magic Link</button>
+      {ok && <p style={{ color: "green" }}>{ok}</p>}
+      {err && <p style={{ color: "red" }}>{err}</p>}
+    </main>
+  );
 }
