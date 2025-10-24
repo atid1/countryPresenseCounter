@@ -14,13 +14,14 @@ export default function HashCatcher() {
     async function run() {
       try {
         if (access_token && refresh_token) {
-          // Send tokens to server to set Supabase cookies
+          console.log("[auth/hash] posting tokens to /api/auth/set-session");
           const res = await fetch("/api/auth/set-session", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ access_token, refresh_token }),
           });
-          // Regardless of response, move on (API will log problems)
+          console.log("[auth/hash] set-session status:", res.status);
+          // Proceed regardless; errors will be logged server-side
           window.location.replace(redirect_to);
         } else if (url.searchParams.has("code") || url.searchParams.has("token")) {
           // Fallback to server callback for query-param style flows
@@ -28,7 +29,8 @@ export default function HashCatcher() {
         } else {
           window.location.replace("/login?error=MissingTokens");
         }
-      } catch {
+      } catch (e) {
+        console.error("[auth/hash] set-session failed", e);
         window.location.replace("/login?error=SetSessionFailed");
       }
     }
