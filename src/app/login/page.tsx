@@ -1,5 +1,4 @@
 "use client";
-
 import { createClient } from "@supabase/supabase-js";
 import { useState } from "react";
 
@@ -8,24 +7,21 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL
-  ?? (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
-
-
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [ok, setOk] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [ok, setOk] = useState<string|null>(null);
+  const [err, setErr] = useState<string|null>(null);
 
   async function sendMagic() {
-    setOk(null);
-    setErr(null);
+    setOk(null); setErr(null);
+
+    // ✅ Use the actual runtime origin (prod, preview, or localhost)
+    const origin = window.location.origin;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${SITE_URL}/api/auth/callback?redirect_to=/trips`
+        emailRedirectTo: `${origin}/api/auth/callback?redirect_to=/trips`
       }
     });
 
@@ -36,14 +32,10 @@ export default function Login() {
   return (
     <main>
       <h1>Login</h1>
-      <input
-        placeholder="you@example.com"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-      />
+      <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" />
       <button onClick={sendMagic}>Send Magic Link</button>
-      {ok && <p style={{ color: "green" }}>{ok}</p>}
-      {err && <p style={{ color: "red" }}>{err}</p>}
+      {ok && <p style={{color:"green"}}>{ok}</p>}
+      {err && <p style={{color:"red"}}>{err}</p>}
     </main>
   );
 }

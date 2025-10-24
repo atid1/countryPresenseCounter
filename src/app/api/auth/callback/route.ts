@@ -14,19 +14,13 @@ export async function GET(req: Request) {
 	const supabase = supabaseServer();
 
 	if (code) {
-		// OAuth / PKCE
 		const { error } = await supabase.auth.exchangeCodeForSession(code);
-		if (error) {
-			console.error("exchangeCodeForSession error:", error.message);
-			return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin));
-		}
+		if (error) return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin));
 	} else if (token && type === "magiclink") {
-		// Magic link flow
-		const { data, error } = await supabase.auth.verifyOtp({ token_hash: token, type: "magiclink" });
-		if (error) {
-			console.error("verifyOtp error:", error.message);
-			return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin));
-		}
+		const { error } = await supabase.auth.verifyOtp({ token_hash: token, type: "magiclink" });
+		if (error) return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin));
+	} else {
+		return NextResponse.redirect(new URL(`/login?error=Missing%20code%20or%20token`, url.origin));
 	}
 
 	return NextResponse.redirect(new URL(redirectTo, url.origin));
