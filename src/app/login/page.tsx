@@ -20,7 +20,7 @@ export default function Login() {
     ? "http://localhost:3000"
     : "https://country-presense-counter.vercel.app"; // project domain only in prod
 
-  const emailRedirectTo = `${base}/api/auth/callback?redirect_to=/trips`;
+  const emailRedirectTo = `${base}/auth/hash?redirect_to=/trips`;
 
   async function sendMagic() {
     setOk(null); setErr(null);
