@@ -1,11 +1,13 @@
-// src/app/api/auth/callback/route.ts
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/src/lib/supabase";
 
-export async function GET(request: Request) {
-	const url = new URL(request.url);
+export async function GET(req: Request) {
+	const url = new URL(req.url);
 	const code = url.searchParams.get("code");
-	const redirectTo = url.searchParams.get("redirect_to") || "/";
+	const redirectTo = url.searchParams.get("redirect_to") || "/trips";
 
 	const supabase = supabaseServer();
 

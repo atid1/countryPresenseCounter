@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 import { requireUserId } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
