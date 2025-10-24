@@ -1,3 +1,4 @@
+// src/app/login/page.tsx
 "use client";
 import { createClient } from "@supabase/supabase-js";
 import { useState } from "react";
@@ -15,13 +16,16 @@ export default function Login() {
   async function sendMagic() {
     setOk(null); setErr(null);
 
-    // ✅ Use the actual runtime origin (prod, preview, or localhost)
-    const origin = window.location.origin;
+    // Always use the **project** domain in production (not a preview URL)
+    const isProd = typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app");
+    const projectDomain = "https://country-presense-counter.vercel.app";
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const base = isProd ? projectDomain : origin;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${origin}/api/auth/callback?redirect_to=/trips`
+        emailRedirectTo: `${base}/api/auth/callback?redirect_to=/trips`
       }
     });
 
@@ -29,13 +33,5 @@ export default function Login() {
     else setOk("Check your email for a sign-in link.");
   }
 
-  return (
-    <main>
-      <h1>Login</h1>
-      <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" />
-      <button onClick={sendMagic}>Send Magic Link</button>
-      {ok && <p style={{color:"green"}}>{ok}</p>}
-      {err && <p style={{color:"red"}}>{err}</p>}
-    </main>
-  );
+  return (/* form UI */);
 }
