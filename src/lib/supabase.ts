@@ -19,9 +19,9 @@ export function supabaseServer() {
           cookiesToSet.forEach(({ name, value, options }) => {
             try {
               cookieStore.set({ name, value, ...options });
+              console.log("[supabaseServer] Cookie set:", name, value, options);
             } catch (e) {
-              // Silent fail in Edge runtime where mutation may be restricted
-              console.warn("Cookie set failed:", name, e);
+              console.warn("[supabaseServer] Cookie set failed:", name, e);
             }
           });
         },
