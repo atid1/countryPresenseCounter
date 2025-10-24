@@ -20,7 +20,32 @@ export async function POST(req: Request) {
 			return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
 		}
 
-		return NextResponse.json({ ok: true, user: data.user ?? null });
+		// Also set cookies explicitly to ensure they stick on Vercel/Next route handlers
+		const res = NextResponse.json({ ok: true, user: data.user ?? null });
+
+		// Derive expiry if available
+		const exp = data.session?.expires_at ? new Date(data.session.expires_at * 1000) : undefined;
+
+		res.cookies.set({
+			name: "sb-access-token",
+			value: access_token,
+			httpOnly: true,
+			secure: true,
+			sameSite: "lax",
+			path: "/",
+			...(exp ? { expires: exp } : {})
+		});
+
+		res.cookies.set({
+			name: "sb-refresh-token",
+			value: refresh_token,
+			httpOnly: true,
+			secure: true,
+			sameSite: "lax",
+			path: "/"
+		});
+
+		return res;
 	} catch (e: any) {
 		console.error("set-session exception:", e?.message || e);
 		return NextResponse.json({ ok: false, error: "Server error" }, { status: 500 });
