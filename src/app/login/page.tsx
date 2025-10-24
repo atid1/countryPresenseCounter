@@ -8,6 +8,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL
+  ?? (typeof window !== "undefined" ? window.location.origin : "http://localhost:3000");
+
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [ok, setOk] = useState<string | null>(null);
@@ -20,7 +25,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`
+        emailRedirectTo: `${SITE_URL}/api/auth/callback?redirect_to=/trips`
       }
     });
 
