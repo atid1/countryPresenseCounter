@@ -35,27 +35,33 @@ six_back as (
   select
     y.*,
     (y.date_to - interval '6 months')::date as six_month_back_date
-  from y y
+  from ytd as y
 ),
-belgium_q as (
+belgium_calc as (
   select
     s.*,
-    (date_trunc('quarter', s.date_to) - interval '6 months')::date as q2_start,
-    (date_trunc('quarter', s.date_to) - interval '1 day')::date    as q0_end
+    -- Calculate start date: max of (6 months before trip end, or Jan 1 of same year)
+    greatest(
+      (s.date_to - interval '6 months')::date,
+      date_trunc('year', s.date_to)::date
+    ) as belgium_window_start
   from six_back s
 ),
 belgium_sum as (
   select
     b.*,
-    case when b.country_code = 'BELGIUM' then (
+    case when b.country_code IN ('BELGIUM', 'BE') then (
       select coalesce(sum(
-        greatest(0, least(bt.date_to, b.q0_end) - greatest(bt.date_from, b.q2_start) + 1)
+        -- Calculate overlap between trip and the window
+        greatest(0, least(bt.date_to, b.date_to) - greatest(bt.date_from, b.belgium_window_start) + 1)
       ),0)
       from public.trip bt
       where bt.user_id = b.user_id
-        and bt.country_code = 'BELGIUM'
+        and bt.country_code IN ('BELGIUM', 'BE')
+        and bt.date_from <= b.date_to  -- Trip starts before or during current trip end
+        and bt.date_to >= b.belgium_window_start  -- Trip ends after or during window start
     ) else null end as belgium_last_2_quarters
-  from belgium_q b
+  from belgium_calc b
 )
 select
   id,

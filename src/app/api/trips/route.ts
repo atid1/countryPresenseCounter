@@ -3,17 +3,10 @@ export const dynamic = "force-dynamic"; // 👈 prevents static cache
 
 import { NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma";
-import { supabaseServer } from "@/src/lib/supabase";
-
-async function getUserId() {
-  const supabase = supabaseServer();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Not authenticated");
-  return user.id;
-}
+import { requireUserId } from "@/src/lib/auth";
 
 export async function GET() {
-  const userId = await getUserId();
+  const userId = await requireUserId();
   const trips = await prisma.trip.findMany({
     where: { user_id: userId },
     orderBy: [{ date_from: "asc" }, { date_to: "asc" }],
@@ -22,7 +15,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const userId = await getUserId();
+  const userId = await requireUserId();
   const form = await req.formData();
   const countryCode = String(form.get("countryCode"));
   const dateFrom = String(form.get("dateFrom"));

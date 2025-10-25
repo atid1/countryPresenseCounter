@@ -23,11 +23,34 @@ export default async function TripsPage() {
   const userId = await requireUserId();
 
   // Fetch from trip_metrics view
-  const metrics = await prisma.$queryRaw<TripMetric[]>`
-    SELECT * FROM trip_metrics
+  const rawMetrics = await prisma.$queryRaw<any[]>`
+    SELECT
+      id,
+      user_id,
+      country_code,
+      date_from,
+      date_to,
+      notes,
+      created_at,
+      days_inclusive::int as days_inclusive,
+      gap_to_next_trip::int as gap_to_next_trip,
+      total_for_location_ytd::int as total_for_location_ytd,
+      six_month_back_date,
+      belgium_last_2_quarters::int as belgium_last_2_quarters
+    FROM trip_metrics
     WHERE user_id = ${userId}::uuid
     ORDER BY date_from ASC, date_to ASC
   `;
+
+  const metrics = rawMetrics.map(m => ({
+    ...m,
+    days_inclusive: Number(m.days_inclusive),
+    gap_to_next_trip: Number(m.gap_to_next_trip),
+    total_for_location_ytd: Number(m.total_for_location_ytd),
+    belgium_last_2_quarters: m.belgium_last_2_quarters ? Number(m.belgium_last_2_quarters) : null
+  })) as TripMetric[];
+
+  console.log('[DEBUG] First trip:', metrics[0]);
 
   // Group trips by year
   const tripsByYear = metrics.reduce((acc, trip) => {
