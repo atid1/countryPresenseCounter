@@ -72,10 +72,43 @@ export async function DELETE(req: Request) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 
+  // Handle bulk delete (from request body)
   if (!id) {
-    return NextResponse.json({ error: "Trip ID required" }, { status: 400 });
+    try {
+      const body = await req.json();
+      const { ids } = body;
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return NextResponse.json({ error: "Trip ID(s) required" }, { status: 400 });
+      }
+
+      // Verify ownership of all trips
+      const existingTrips = await prisma.trip.findMany({
+        where: {
+          id: { in: ids },
+          user_id: userId
+        }
+      });
+
+      if (existingTrips.length !== ids.length) {
+        return NextResponse.json({ error: "Some trips not found or unauthorized" }, { status: 404 });
+      }
+
+      // Delete all trips
+      await prisma.trip.deleteMany({
+        where: {
+          id: { in: ids },
+          user_id: userId
+        }
+      });
+
+      return NextResponse.json({ success: true, deleted: ids.length });
+    } catch (error) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
   }
 
+  // Handle single delete (from query param)
   // Verify ownership
   const existing = await prisma.trip.findFirst({
     where: { id, user_id: userId }

@@ -70,6 +70,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTrip, setEditingTrip] = useState<EditingTrip | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const editingRowRef = useRef<HTMLTableRowElement>(null);
 
   // Handle clicking outside the editing row
@@ -203,6 +204,54 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
     }
   };
 
+  const toggleSelectTrip = (tripId: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(tripId)) {
+      newSelected.delete(tripId);
+    } else {
+      newSelected.add(tripId);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const toggleSelectAll = (yearTrips: TripMetric[]) => {
+    const yearTripIds = yearTrips.map(t => t.id);
+    const allSelected = yearTripIds.every(id => selectedIds.has(id));
+
+    const newSelected = new Set(selectedIds);
+    if (allSelected) {
+      yearTripIds.forEach(id => newSelected.delete(id));
+    } else {
+      yearTripIds.forEach(id => newSelected.add(id));
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const deleteSelectedTrips = async () => {
+    if (selectedIds.size === 0) return;
+
+    const count = selectedIds.size;
+    if (!confirm(`Are you sure you want to delete ${count} trip${count > 1 ? 's' : ''}?`)) return;
+
+    try {
+      const response = await fetch('/api/trips', {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+
+      if (!response.ok) {
+        alert("Failed to delete trips");
+        return;
+      }
+
+      // Refresh the page
+      window.location.reload();
+    } catch (err) {
+      alert("Failed to delete trips");
+    }
+  };
+
   return (
     <>
       {error && (
@@ -215,6 +264,38 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
           color: '#dc2626'
         }}>
           {error}
+        </div>
+      )}
+
+      {selectedIds.size > 0 && (
+        <div style={{
+          background: '#eff6ff',
+          border: '1px solid #3b82f6',
+          borderRadius: '4px',
+          padding: '0.75rem',
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <span style={{color: '#1e40af', fontWeight: 500}}>
+            {selectedIds.size} trip{selectedIds.size > 1 ? 's' : ''} selected
+          </span>
+          <button
+            onClick={deleteSelectedTrips}
+            style={{
+              padding: '0.5rem 1rem',
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              cursor: 'pointer'
+            }}
+          >
+            Delete Selected
+          </button>
         </div>
       )}
 
@@ -243,6 +324,14 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
               }}>
                 <thead>
                   <tr style={{background: '#f9fafb', borderBottom: '1px solid #e5e7eb'}}>
+                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap', width: '40px'}}>
+                      <input
+                        type="checkbox"
+                        checked={yearTrips.every(t => selectedIds.has(t.id))}
+                        onChange={() => toggleSelectAll(yearTrips)}
+                        style={{cursor: 'pointer', width: '16px', height: '16px'}}
+                      />
+                    </th>
                     <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Location</th>
                     <th style={{padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap'}}>From</th>
                     <th style={{padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap'}}>To</th>
@@ -267,6 +356,17 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                           key={trip.id}
                           style={{borderBottom: '1px solid #f3f4f6', background: '#eff6ff'}}
                         >
+                          <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(trip.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                toggleSelectTrip(trip.id);
+                              }}
+                              style={{cursor: 'pointer', width: '16px', height: '16px'}}
+                            />
+                          </td>
                           <td style={{padding: '0.75rem 1rem'}}>
                             <select
                               value={editingTrip.country_code}
@@ -363,6 +463,18 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                           if (!hasRedGap) e.currentTarget.style.background = 'transparent';
                         }}
                       >
+                        <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(trip.id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              toggleSelectTrip(trip.id);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{cursor: 'pointer', width: '16px', height: '16px'}}
+                          />
+                        </td>
                         <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>
                           {trip.country_code}
                           {hasRedGap && (
