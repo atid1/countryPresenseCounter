@@ -18,10 +18,10 @@ export async function POST(req: Request) {
   await prisma.$transaction(
     rows.map(r => prisma.trip.create({
       data: {
-        userId,
-        countryCode: r.LOCATION.trim(),
-        dateFrom: new Date(r.FROM),
-        dateTo: new Date(r.TO),
+        user_id: userId,
+        country_code: r.LOCATION.trim(),
+        date_from: new Date(r.FROM),
+        date_to: new Date(r.TO),
         notes: r.NOTES?.trim()
       }
     }))

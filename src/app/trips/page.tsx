@@ -6,7 +6,7 @@ import { prisma } from "@/src/lib/prisma";
 
 export default async function TripsPage() {
   const userId = await requireUserId();
-  const trips = await prisma.trip.findMany({ where: { userId }, orderBy: [{ dateFrom: "asc" }, { dateTo: "asc" }] });
+  const trips = await prisma.trip.findMany({ where: { user_id: userId }, orderBy: [{ date_from: "asc" }, { date_to: "asc" }] });
 
   return (
     <main>
@@ -33,9 +33,9 @@ export default async function TripsPage() {
         <tbody>
           {trips.map(t=>(
             <tr key={t.id}>
-              <td>{t.countryCode}</td>
-              <td>{t.dateFrom.toISOString().slice(0,10)}</td>
-              <td>{t.dateTo.toISOString().slice(0,10)}</td>
+              <td>{t.country_code}</td>
+              <td>{t.date_from.toISOString().slice(0,10)}</td>
+              <td>{t.date_to.toISOString().slice(0,10)}</td>
               <td>{t.notes}</td>
             </tr>
           ))}

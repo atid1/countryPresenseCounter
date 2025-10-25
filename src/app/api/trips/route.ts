@@ -15,8 +15,8 @@ async function getUserId() {
 export async function GET() {
   const userId = await getUserId();
   const trips = await prisma.trip.findMany({
-    where: { userId },
-    orderBy: [{ dateFrom: "asc" }, { dateTo: "asc" }],
+    where: { user_id: userId },
+    orderBy: [{ date_from: "asc" }, { date_to: "asc" }],
   });
   return NextResponse.json(trips);
 }
@@ -31,10 +31,10 @@ export async function POST(req: Request) {
 
   await prisma.trip.create({
     data: {
-      userId,
-      countryCode,
-      dateFrom: new Date(dateFrom),
-      dateTo: new Date(dateTo),
+      user_id: userId,
+      country_code: countryCode,
+      date_from: new Date(dateFrom),
+      date_to: new Date(dateTo),
       notes,
     },
   });
