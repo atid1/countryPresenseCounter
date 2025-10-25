@@ -4,6 +4,7 @@ export const runtime = "nodejs";
 import { requireUserId } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
 import TripsTable from "./TripsTable";
+import ImportForm from "./ImportForm";
 
 type TripMetric = {
   id: string;
@@ -27,8 +28,17 @@ function formatDate(date: Date): string {
   return `${day}/${month}/${year}`;
 }
 
-export default async function TripsPage() {
+export default async function TripsPage({
+  searchParams,
+}: {
+  searchParams: { error?: string; countryCode?: string; dateFrom?: string; dateTo?: string; notes?: string };
+}) {
   const userId = await requireUserId();
+  const error = searchParams.error;
+  const prefillCountryCode = searchParams.countryCode || "";
+  const prefillDateFrom = searchParams.dateFrom || "";
+  const prefillDateTo = searchParams.dateTo || "";
+  const prefillNotes = searchParams.notes || "";
 
   // Fetch from trip_metrics view
   const rawMetrics = await prisma.$queryRaw<any[]>`
@@ -72,12 +82,28 @@ export default async function TripsPage() {
 
   return (
     <main style={{
-      maxWidth: '1800px',
-      margin: '0 auto',
-      padding: '2rem',
+      maxWidth: '100%',
+      padding: '2rem 2rem 2rem 1rem',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
       <h1 style={{fontSize: '2rem', fontWeight: 600, marginBottom: '2rem'}}>Trips</h1>
+
+      {error && (
+        <div style={{
+          background: '#fee2e2',
+          border: '1px solid #ef4444',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '2rem',
+          color: '#dc2626',
+          fontSize: '0.875rem',
+          fontWeight: 500
+        }}>
+          {error === 'invalid_dates'
+            ? 'End date cannot be before start date'
+            : error}
+        </div>
+      )}
 
       <div style={{
         display: 'grid',
@@ -97,7 +123,7 @@ export default async function TripsPage() {
               <label style={{display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', color: '#374151'}}>
                 Country
               </label>
-              <select name="countryCode" required
+              <select name="countryCode" required defaultValue={prefillCountryCode}
                 style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}}>
                 <option value="">Select a country...</option>
                 <option value="IL">Israel (IL)</option>
@@ -121,21 +147,21 @@ export default async function TripsPage() {
               <label style={{display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', color: '#374151'}}>
                 From Date
               </label>
-              <input type="date" name="dateFrom" required
+              <input type="date" name="dateFrom" required defaultValue={prefillDateFrom} spellCheck={false}
                 style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
             </div>
             <div>
               <label style={{display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', color: '#374151'}}>
                 To Date
               </label>
-              <input type="date" name="dateTo" required
+              <input type="date" name="dateTo" required defaultValue={prefillDateTo} spellCheck={false}
                 style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
             </div>
             <div>
               <label style={{display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', color: '#374151'}}>
                 Notes (optional)
               </label>
-              <input type="text" name="notes"
+              <input type="text" name="notes" defaultValue={prefillNotes} spellCheck={false}
                 style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
             </div>
             <button type="submit" style={{
@@ -158,20 +184,7 @@ export default async function TripsPage() {
           padding: '1.5rem'
         }}>
           <h2 style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem'}}>Import / Export</h2>
-          <form action="/api/import" method="post" encType="multipart/form-data" style={{marginBottom: '1rem'}}>
-            <input type="file" name="file" accept=".csv"
-              style={{marginBottom: '0.75rem', fontSize: '0.875rem'}} />
-            <button type="submit" style={{
-              padding: '0.5rem 1rem',
-              background: '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: 'pointer'
-            }}>Upload CSV</button>
-          </form>
+          <ImportForm />
           <a href="/api/export" style={{
             display: 'inline-block',
             padding: '0.5rem 1rem',

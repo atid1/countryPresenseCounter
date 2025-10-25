@@ -313,13 +313,15 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
               background: 'white',
               border: '1px solid #e5e7eb',
               borderRadius: '8px',
-              width: '100%'
+              width: '100%',
+              overflow: 'hidden'
             }}>
               <table style={{
                 width: '100%',
                 tableLayout: 'fixed',
                 borderCollapse: 'collapse',
-                fontSize: '0.875rem'
+                fontSize: '0.875rem',
+                border: 'none'
               }}>
                 <thead>
                   <tr style={{background: '#f9fafb', borderBottom: '1px solid #e5e7eb'}}>
@@ -328,6 +330,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                         type="checkbox"
                         checked={yearTrips.every(t => selectedIds.has(t.id))}
                         onChange={() => toggleSelectAll(yearTrips)}
+                        spellCheck={false}
                         style={{cursor: 'pointer', width: '16px', height: '16px'}}
                       />
                     </th>
@@ -337,8 +340,8 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                     <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '60px'}}>Days</th>
                     <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '65px'}}>Total</th>
                     <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '70px'}}>BE 2Q</th>
-                    <th style={{padding: '0.75rem 1.5rem', textAlign: 'left', fontWeight: 600, width: '200px'}}>Notes</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, width: '160px'}}>Actions</th>
+                    <th style={{padding: '0.75rem 1.5rem', textAlign: 'left', fontWeight: 600, width: '400px'}}>Notes</th>
+                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, width: '180px'}}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -363,6 +366,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                                 e.stopPropagation();
                                 toggleSelectTrip(trip.id);
                               }}
+                              spellCheck={false}
                               style={{cursor: 'pointer', width: '16px', height: '16px'}}
                             />
                           </td>
@@ -383,6 +387,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                               type="date"
                               value={editingTrip.date_from}
                               onChange={(e) => setEditingTrip({...editingTrip, date_from: e.target.value})}
+                              spellCheck={false}
                               style={{width: '100%', padding: '0.375rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
                             />
                           </td>
@@ -391,6 +396,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                               type="date"
                               value={editingTrip.date_to}
                               onChange={(e) => setEditingTrip({...editingTrip, date_to: e.target.value})}
+                              spellCheck={false}
                               style={{width: '100%', padding: '0.375rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
                             />
                           </td>
@@ -407,6 +413,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                                   saveTrip();
                                 }
                               }}
+                              spellCheck={false}
                               style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
                             />
                           </td>
@@ -471,6 +478,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                               toggleSelectTrip(trip.id);
                             }}
                             onClick={(e) => e.stopPropagation()}
+                            spellCheck={false}
                             style={{cursor: 'pointer', width: '16px', height: '16px'}}
                           />
                         </td>

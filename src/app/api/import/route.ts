@@ -163,6 +163,56 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid CSV", errors }, { status: 400 });
   }
 
+  // Check for overlaps with existing trips
+  const existingTrips = await prisma.trip.findMany({
+    where: { user_id: userId },
+    select: { id: true, date_from: true, date_to: true, country_code: true }
+  });
+
+  normalized.forEach((newTrip, idx) => {
+    for (const existingTrip of existingTrips) {
+      // Check if dates overlap
+      if (newTrip.date_from < existingTrip.date_to && newTrip.date_to > existingTrip.date_from) {
+        const formatDate = (date: Date) => {
+          const d = date.getUTCDate();
+          const m = date.getUTCMonth() + 1;
+          const y = date.getUTCFullYear();
+          return `${d}/${m}/${y}`;
+        };
+        errors.push({
+          row: idx + 1,
+          message: `Trip overlaps with existing ${existingTrip.country_code} trip from ${formatDate(existingTrip.date_from)} to ${formatDate(existingTrip.date_to)}`
+        });
+        break;
+      }
+    }
+  });
+
+  // Check for overlaps within the imported data itself
+  for (let i = 0; i < normalized.length; i++) {
+    for (let j = i + 1; j < normalized.length; j++) {
+      const trip1 = normalized[i];
+      const trip2 = normalized[j];
+      if (trip1.date_from < trip2.date_to && trip1.date_to > trip2.date_from) {
+        const formatDate = (date: Date) => {
+          const d = date.getUTCDate();
+          const m = date.getUTCMonth() + 1;
+          const y = date.getUTCFullYear();
+          return `${d}/${m}/${y}`;
+        };
+        errors.push({
+          row: j + 1,
+          message: `Trip overlaps with row ${i + 1} (${trip1.country_code} from ${formatDate(trip1.date_from)} to ${formatDate(trip1.date_to)})`
+        });
+        break;
+      }
+    }
+  }
+
+  if (errors.length) {
+    return NextResponse.json({ error: "Invalid CSV - date overlaps detected", errors }, { status: 400 });
+  }
+
   // Insert within a transaction; keep per-row creates to respect RLS per row and surface exact failures
   await prisma.$transaction(
     normalized.map((n) =>

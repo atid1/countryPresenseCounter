@@ -22,6 +22,46 @@ export async function POST(req: Request) {
   const dateTo = String(form.get("dateTo"));
   const notes = form.get("notes") ? String(form.get("notes")) : undefined;
 
+  const newDateFrom = new Date(dateFrom);
+  const newDateTo = new Date(dateTo);
+
+  // Validate date range
+  if (newDateFrom > newDateTo) {
+    const url = new URL("/trips", req.url);
+    url.searchParams.set("error", "invalid_dates");
+    url.searchParams.set("countryCode", countryCode);
+    url.searchParams.set("dateFrom", dateFrom);
+    url.searchParams.set("dateTo", dateTo);
+    if (notes) url.searchParams.set("notes", notes);
+    return NextResponse.redirect(url);
+  }
+
+  // Check for overlapping trips
+  const existingTrips = await prisma.trip.findMany({
+    where: { user_id: userId },
+    select: { id: true, date_from: true, date_to: true, country_code: true }
+  });
+
+  for (const trip of existingTrips) {
+    // Check if dates overlap (trips share more than just boundary dates)
+    if (newDateFrom < trip.date_to && newDateTo > trip.date_from) {
+      const formatDate = (date: Date) => {
+        const d = date.getUTCDate();
+        const m = date.getUTCMonth() + 1;
+        const y = date.getUTCFullYear();
+        return `${d}/${m}/${y}`;
+      };
+      const errorMsg = `Trip overlaps with ${trip.country_code} from ${formatDate(trip.date_from)} to ${formatDate(trip.date_to)}`;
+      const url = new URL("/trips", req.url);
+      url.searchParams.set("error", errorMsg);
+      url.searchParams.set("countryCode", countryCode);
+      url.searchParams.set("dateFrom", dateFrom);
+      url.searchParams.set("dateTo", dateTo);
+      if (notes) url.searchParams.set("notes", notes);
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Ensure country exists in the country table
   await prisma.country.upsert({
     where: { code: countryCode },
@@ -33,8 +73,8 @@ export async function POST(req: Request) {
     data: {
       user_id: userId,
       country_code: countryCode,
-      date_from: new Date(dateFrom),
-      date_to: new Date(dateTo),
+      date_from: newDateFrom,
+      date_to: newDateTo,
       notes,
     },
   });
