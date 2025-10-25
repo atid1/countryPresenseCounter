@@ -33,9 +33,17 @@ export default function ImportForm() {
         body: formData,
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        if (data.errors && Array.isArray(data.errors)) {
+      let payload: unknown = null;
+      try {
+        payload = await response.json();
+      } catch (parseErr) {
+        // If the response is not JSON, fall through to generic handling
+      }
+
+      const data = payload as { success?: boolean; error?: string; errors?: ImportError[] } | null;
+
+      if (data && data.success === false) {
+        if (Array.isArray(data.errors)) {
           setErrors(data.errors);
           setShowErrorDialog(true);
         } else {
@@ -45,7 +53,17 @@ export default function ImportForm() {
         return;
       }
 
-      // Success - redirect to trips page
+      if (data && data.success === true) {
+        window.location.href = "/trips";
+        return;
+      }
+
+      if (!response.ok) {
+        alert(data?.error || "Failed to import CSV");
+        setIsUploading(false);
+        return;
+      }
+
       window.location.href = "/trips";
     } catch (err) {
       alert("Failed to upload CSV");

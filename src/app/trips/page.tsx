@@ -5,6 +5,7 @@ import { requireUserId } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
 import TripsTable from "./TripsTable";
 import AddTripForm from "./AddTripForm";
+import ImportForm from "./ImportForm";
 
 type TripMetric = {
   id: string;
@@ -133,20 +134,7 @@ export default async function TripsPage({
           padding: '1.5rem'
         }}>
           <h2 style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem'}}>Import / Export</h2>
-          <form action="/api/import" method="post" encType="multipart/form-data" style={{marginBottom: '1rem'}}>
-            <input type="file" name="file" accept=".csv" spellCheck={false}
-              style={{marginBottom: '0.75rem', fontSize: '0.875rem'}} />
-            <button type="submit" style={{
-              padding: '0.5rem 1rem',
-              background: '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: 'pointer'
-            }}>Upload CSV</button>
-          </form>
+          <ImportForm />
           <a href="/api/export" style={{
             display: 'inline-block',
             padding: '0.5rem 1rem',

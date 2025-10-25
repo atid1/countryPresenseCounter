@@ -52,21 +52,35 @@ function normalizeCountry(input: string | undefined) {
   const raw = String(input).trim();
   if (!raw) return undefined;
 
-  // Common fixes
-  const up = raw.toUpperCase();
+  const sanitized = raw
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
+    .replace(/[^A-Za-z\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  // Already 2-letter code
+  const up = (sanitized || raw).toUpperCase();
+  const tokens = up.split(" ").filter(Boolean);
+
   if (/^[A-Z]{2}$/.test(up)) return up;
+  if (tokens.length > 0) {
+    const first = tokens[0];
+    const last = tokens[tokens.length - 1];
+    if (/^[A-Z]{2}$/.test(first)) return first;
+    if (/^[A-Z]{2}$/.test(last)) return last;
+  }
 
-  // 3-letter to 2-letter small map
   const A3_TO_A2: Record<string, string> = {
     BEL: "BE", ISR: "IL", FRA: "FR", USA: "US", GBR: "GB", UK: "GB",
     NLD: "NL", DEU: "DE", ESP: "ES", ITA: "IT", CHE: "CH"
   };
 
+  for (const token of tokens) {
+    if (A3_TO_A2[token]) return A3_TO_A2[token];
+  }
   if (A3_TO_A2[up]) return A3_TO_A2[up];
 
-  // Names to codes small map (extend as needed)
   const NAME_TO_A2: Record<string, string> = {
     BELGIUM: "BE",
     ISRAEL: "IL",
@@ -78,11 +92,12 @@ function normalizeCountry(input: string | undefined) {
     NETHERLANDS: "NL",
     GERMANY: "DE",
     SPAIN: "ES",
+    ESPANA: "ES",
     ITALY: "IT",
     SWITZERLAND: "CH"
   };
 
-  const nameKey = up.replace(/\./g, "").replace(/\s+/g, " ").trim();
+  const nameKey = tokens.join(" ");
   if (NAME_TO_A2[nameKey]) return NAME_TO_A2[nameKey];
 
   return undefined;
@@ -93,7 +108,7 @@ export async function POST(req: Request) {
   const form = await req.formData();
   const file = form.get("file") as File | null;
   if (!file) {
-    return NextResponse.json({ error: "missing file" }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Missing file" });
   }
 
   const csv = await file.text();
@@ -160,7 +175,7 @@ export async function POST(req: Request) {
   }
 
   if (errors.length) {
-    return NextResponse.json({ error: "Invalid CSV", errors }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid CSV", errors });
   }
 
   // Check for overlaps with existing trips
@@ -210,7 +225,7 @@ export async function POST(req: Request) {
   }
 
   if (errors.length) {
-    return NextResponse.json({ error: "Invalid CSV - date overlaps detected", errors }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Invalid CSV - date overlaps detected", errors });
   }
 
   // Insert within a transaction; keep per-row creates to respect RLS per row and surface exact failures
@@ -228,5 +243,5 @@ export async function POST(req: Request) {
     )
   );
 
-  return NextResponse.redirect(new URL("/trips", req.url));
+  return NextResponse.json({ success: true });
 }
