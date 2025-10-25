@@ -6,25 +6,120 @@ import { requireUserId } from "@/src/lib/auth";
 import { parseTripsCsv } from "@/src/lib/csv";
 import { prisma } from "@/src/lib/prisma";
 
+/**
+ * Helper: get first defined value from an object by a list of candidate keys
+ */
+function firstVal(row: Record<string, unknown>, candidates: string[]) {
+  for (const k of candidates) {
+    const v = row[k];
+    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v);
+  }
+  return undefined;
+}
+
+/**
+ * Helper: parse a date string into a Date (supports YYYY-MM-DD and common variants)
+ */
+function parseDateLike(s: string | undefined) {
+  if (!s) return undefined;
+  const t = String(s).trim();
+
+  // Normalize common separators
+  const isoish = t.replace(/\./g, "-").replace(/\//g, "-");
+
+  // Try ISO (YYYY-MM-DD)
+  if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(isoish)) {
+    const d = new Date(isoish + "T00:00:00Z");
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  // Try DD-MM-YYYY
+  const m = isoish.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (m) {
+    const [_, dd, mm, yyyy] = m;
+    const d = new Date(`${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}T00:00:00Z`);
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  // Last resort: native Date
+  const d = new Date(t);
+  return isNaN(d.getTime()) ? undefined : d;
+}
+
 export async function POST(req: Request) {
   const userId = await requireUserId();
   const form = await req.formData();
   const file = form.get("file") as File | null;
-  if (!file) return NextResponse.json({ error: "missing file" }, { status: 400 });
+  if (!file) {
+    return NextResponse.json({ error: "missing file" }, { status: 400 });
+  }
 
   const csv = await file.text();
-  const rows = parseTripsCsv(csv);
+  const rows = parseTripsCsv(csv) as Array<Record<string, unknown>>;
 
+  // Accept both our preferred headers and the legacy Excel export headers
+  const COUNTRY_KEYS = ["countryCode", "country_code", "LOCATION", "location", "Country", "country"];
+  const FROM_KEYS = ["dateFrom", "date_from", "from", "FROM", "start", "startDate", "Start Date"];
+  const TO_KEYS = ["dateTo", "date_to", "to", "TO", "end", "endDate", "End Date"];
+  const NOTES_KEYS = ["notes", "NOTES", "comment", "Comment", "Comments"];
+
+  type Normalized = { country_code: string; date_from: Date; date_to: Date; notes?: string | null };
+
+  const normalized: Normalized[] = [];
+  const errors: Array<{ row: number; message: string }> = [];
+
+  rows.forEach((row, idx) => {
+    const countryRaw = firstVal(row, COUNTRY_KEYS);
+    const fromRaw = firstVal(row, FROM_KEYS);
+    const toRaw = firstVal(row, TO_KEYS);
+    const notesRaw = firstVal(row, NOTES_KEYS);
+
+    const country = countryRaw?.trim().toUpperCase();
+    const date_from = parseDateLike(fromRaw);
+    const date_to = parseDateLike(toRaw);
+
+    if (!country || country.length !== 2) {
+      errors.push({ row: idx + 1, message: "country code missing/invalid (expect 2-letter ISO, e.g. IL, BE)" });
+      return;
+    }
+    if (!date_from) {
+      errors.push({ row: idx + 1, message: "dateFrom missing/invalid (use YYYY-MM-DD)" });
+      return;
+    }
+    if (!date_to) {
+      errors.push({ row: idx + 1, message: "dateTo missing/invalid (use YYYY-MM-DD)" });
+      return;
+    }
+    if (date_from.getTime() > date_to.getTime()) {
+      errors.push({ row: idx + 1, message: "dateFrom is after dateTo" });
+      return;
+    }
+
+    normalized.push({
+      country_code: country,
+      date_from,
+      date_to,
+      notes: notesRaw ? String(notesRaw).trim() : null
+    });
+  });
+
+  if (errors.length) {
+    return NextResponse.json({ error: "Invalid CSV", errors }, { status: 400 });
+  }
+
+  // Insert within a transaction; keep per-row creates to respect RLS per row and surface exact failures
   await prisma.$transaction(
-    rows.map(r => prisma.trip.create({
-      data: {
-        user_id: userId,
-        country_code: r.LOCATION.trim(),
-        date_from: new Date(r.FROM),
-        date_to: new Date(r.TO),
-        notes: r.NOTES?.trim()
-      }
-    }))
+    normalized.map((n) =>
+      prisma.trip.create({
+        data: {
+          user_id: userId,
+          country_code: n.country_code,
+          date_from: n.date_from,
+          date_to: n.date_to,
+          notes: n.notes ?? undefined
+        }
+      })
+    )
   );
 
   return NextResponse.redirect(new URL("/trips", req.url));
