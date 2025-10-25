@@ -46,6 +46,48 @@ function parseDateLike(s: string | undefined) {
   return isNaN(d.getTime()) ? undefined : d;
 }
 
+/** Normalize country inputs to 2-letter ISO if possible */
+function normalizeCountry(input: string | undefined) {
+  if (!input) return undefined;
+  const raw = String(input).trim();
+  if (!raw) return undefined;
+
+  // Common fixes
+  const up = raw.toUpperCase();
+
+  // Already 2-letter code
+  if (/^[A-Z]{2}$/.test(up)) return up;
+
+  // 3-letter to 2-letter small map
+  const A3_TO_A2: Record<string, string> = {
+    BEL: "BE", ISR: "IL", FRA: "FR", USA: "US", GBR: "GB", UK: "GB",
+    NLD: "NL", DEU: "DE", ESP: "ES", ITA: "IT", CHE: "CH"
+  };
+
+  if (A3_TO_A2[up]) return A3_TO_A2[up];
+
+  // Names to codes small map (extend as needed)
+  const NAME_TO_A2: Record<string, string> = {
+    BELGIUM: "BE",
+    ISRAEL: "IL",
+    FRANCE: "FR",
+    "UNITED KINGDOM": "GB",
+    UK: "GB",
+    "UNITED STATES": "US",
+    USA: "US",
+    NETHERLANDS: "NL",
+    GERMANY: "DE",
+    SPAIN: "ES",
+    ITALY: "IT",
+    SWITZERLAND: "CH"
+  };
+
+  const nameKey = up.replace(/\./g, "").replace(/\s+/g, " ").trim();
+  if (NAME_TO_A2[nameKey]) return NAME_TO_A2[nameKey];
+
+  return undefined;
+}
+
 export async function POST(req: Request) {
   const userId = await requireUserId();
   const form = await req.formData();
@@ -74,7 +116,7 @@ export async function POST(req: Request) {
     const toRaw = firstVal(row, TO_KEYS);
     const notesRaw = firstVal(row, NOTES_KEYS);
 
-    const country = countryRaw?.trim().toUpperCase();
+    const country = normalizeCountry(countryRaw);
     const date_from = parseDateLike(fromRaw);
     const date_to = parseDateLike(toRaw);
 
@@ -102,6 +144,20 @@ export async function POST(req: Request) {
       notes: notesRaw ? String(notesRaw).trim() : null
     });
   });
+
+  // Ensure referenced countries exist to satisfy FK (idempotent upsert)
+  const uniqueCodes = Array.from(new Set(normalized.map(n => n.country_code)));
+  if (uniqueCodes.length > 0) {
+    await prisma.$transaction(
+      uniqueCodes.map(code =>
+        prisma.country.upsert({
+          where: { code },
+          update: {},
+          create: { code, label: code } // label can be refined later
+        })
+      )
+    );
+  }
 
   if (errors.length) {
     return NextResponse.json({ error: "Invalid CSV", errors }, { status: 400 });
