@@ -310,21 +310,20 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
               color: '#1f2937'
             }}>{year}</h2>
             <div style={{
-              overflowX: 'auto',
               background: 'white',
               border: '1px solid #e5e7eb',
               borderRadius: '8px',
               width: '100%'
             }}>
               <table style={{
-                width: 'max-content',
-                minWidth: '100%',
+                width: '100%',
+                tableLayout: 'fixed',
                 borderCollapse: 'collapse',
                 fontSize: '0.875rem'
               }}>
                 <thead>
                   <tr style={{background: '#f9fafb', borderBottom: '1px solid #e5e7eb'}}>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap', width: '40px'}}>
+                    <th style={{padding: '0.75rem', textAlign: 'center', fontWeight: 600, width: '50px'}}>
                       <input
                         type="checkbox"
                         checked={yearTrips.every(t => selectedIds.has(t.id))}
@@ -332,14 +331,14 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                         style={{cursor: 'pointer', width: '16px', height: '16px'}}
                       />
                     </th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Location</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap'}}>From</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap'}}>To</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}># Days</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Total for Location</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Belgium Last 2Q</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap', minWidth: '150px'}}>Notes</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Actions</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '75px'}}>Location</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'left', fontWeight: 600, width: '140px'}}>From</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'left', fontWeight: 600, width: '140px'}}>To</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '60px'}}>Days</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '65px'}}>Total</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '70px'}}>BE 2Q</th>
+                    <th style={{padding: '0.75rem 1.5rem', textAlign: 'left', fontWeight: 600, width: '200px'}}>Notes</th>
+                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, width: '160px'}}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -356,7 +355,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                           key={trip.id}
                           style={{borderBottom: '1px solid #f3f4f6', background: '#eff6ff'}}
                         >
-                          <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
+                          <td style={{padding: '0.75rem', textAlign: 'center'}}>
                             <input
                               type="checkbox"
                               checked={selectedIds.has(trip.id)}
@@ -367,38 +366,38 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                               style={{cursor: 'pointer', width: '16px', height: '16px'}}
                             />
                           </td>
-                          <td style={{padding: '0.75rem 1rem'}}>
+                          <td style={{padding: '0.75rem 0.5rem'}}>
                             <select
                               value={editingTrip.country_code}
                               onChange={(e) => setEditingTrip({...editingTrip, country_code: e.target.value})}
                               autoFocus
-                              style={{width: '100%', padding: '0.25rem', border: '1px solid #d1d5db', borderRadius: '4px'}}
+                              style={{width: '100%', padding: '0.375rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
                             >
                               {COUNTRIES.map(c => (
                                 <option key={c.code} value={c.code}>{c.code}</option>
                               ))}
                             </select>
                           </td>
-                          <td style={{padding: '0.75rem 1rem'}}>
+                          <td style={{padding: '0.75rem 0.5rem'}}>
                             <input
                               type="date"
                               value={editingTrip.date_from}
                               onChange={(e) => setEditingTrip({...editingTrip, date_from: e.target.value})}
-                              style={{width: '100%', padding: '0.25rem', border: '1px solid #d1d5db', borderRadius: '4px'}}
+                              style={{width: '100%', padding: '0.375rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
                             />
                           </td>
-                          <td style={{padding: '0.75rem 1rem'}}>
+                          <td style={{padding: '0.75rem 0.5rem'}}>
                             <input
                               type="date"
                               value={editingTrip.date_to}
                               onChange={(e) => setEditingTrip({...editingTrip, date_to: e.target.value})}
-                              style={{width: '100%', padding: '0.25rem', border: '1px solid #d1d5db', borderRadius: '4px'}}
+                              style={{width: '100%', padding: '0.375rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
                             />
                           </td>
-                          <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>{trip.days_inclusive}</td>
-                          <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>{trip.total_for_location_ytd}</td>
-                          <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>{trip.belgium_last_2_quarters ?? ''}</td>
-                          <td style={{padding: '0.75rem 1rem'}}>
+                          <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.days_inclusive}</td>
+                          <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.total_for_location_ytd}</td>
+                          <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.belgium_last_2_quarters ?? ''}</td>
+                          <td style={{padding: '0.75rem 1.5rem'}}>
                             <input
                               type="text"
                               value={editingTrip.notes}
@@ -408,21 +407,21 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                                   saveTrip();
                                 }
                               }}
-                              style={{width: '100%', padding: '0.25rem', border: '1px solid #d1d5db', borderRadius: '4px'}}
+                              style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
                             />
                           </td>
-                          <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>
+                          <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
                             <button
                               onClick={saveTrip}
                               style={{
-                                padding: '0.25rem 0.5rem',
+                                padding: '0.375rem 0.75rem',
                                 background: '#10b981',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
                                 fontSize: '0.75rem',
                                 cursor: 'pointer',
-                                marginRight: '0.25rem'
+                                marginRight: '0.375rem'
                               }}
                             >
                               Save
@@ -430,7 +429,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                             <button
                               onClick={cancelEditing}
                               style={{
-                                padding: '0.25rem 0.5rem',
+                                padding: '0.375rem 0.75rem',
                                 background: '#6b7280',
                                 color: 'white',
                                 border: 'none',
@@ -463,7 +462,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                           if (!hasRedGap) e.currentTarget.style.background = 'transparent';
                         }}
                       >
-                        <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
+                        <td style={{padding: '0.75rem', textAlign: 'center'}}>
                           <input
                             type="checkbox"
                             checked={selectedIds.has(trip.id)}
@@ -475,11 +474,11 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                             style={{cursor: 'pointer', width: '16px', height: '16px'}}
                           />
                         </td>
-                        <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>
+                        <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>
                           {trip.country_code}
                           {hasRedGap && (
                             <div style={{
-                              fontSize: '0.75rem',
+                              fontSize: '0.7rem',
                               color: '#dc2626',
                               fontWeight: 600,
                               marginTop: '0.25rem'
@@ -488,20 +487,20 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                             </div>
                           )}
                         </td>
-                        <td style={{padding: '0.75rem 1rem', whiteSpace: 'nowrap'}}>{formatDate(trip.date_from)}</td>
-                        <td style={{padding: '0.75rem 1rem', whiteSpace: 'nowrap'}}>{formatDate(trip.date_to)}</td>
-                        <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>{trip.days_inclusive}</td>
-                        <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>{trip.total_for_location_ytd}</td>
-                        <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>{trip.belgium_last_2_quarters ?? ''}</td>
-                        <td style={{padding: '0.75rem 1rem', whiteSpace: 'nowrap', minWidth: '150px'}}>{trip.notes}</td>
-                        <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>
+                        <td style={{padding: '0.75rem 0.5rem'}}>{formatDate(trip.date_from)}</td>
+                        <td style={{padding: '0.75rem 0.5rem'}}>{formatDate(trip.date_to)}</td>
+                        <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.days_inclusive}</td>
+                        <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.total_for_location_ytd}</td>
+                        <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.belgium_last_2_quarters ?? ''}</td>
+                        <td style={{padding: '0.75rem 1.5rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{trip.notes}</td>
+                        <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteTrip(trip.id);
                             }}
                             style={{
-                              padding: '0.25rem 0.5rem',
+                              padding: '0.375rem 0.75rem',
                               background: '#ef4444',
                               color: 'white',
                               border: 'none',

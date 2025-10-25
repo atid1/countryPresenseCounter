@@ -72,7 +72,7 @@ export default async function TripsPage() {
 
   return (
     <main style={{
-      maxWidth: '1400px',
+      maxWidth: '1800px',
       margin: '0 auto',
       padding: '2rem',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'

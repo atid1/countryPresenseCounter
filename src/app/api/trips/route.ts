@@ -22,6 +22,13 @@ export async function POST(req: Request) {
   const dateTo = String(form.get("dateTo"));
   const notes = form.get("notes") ? String(form.get("notes")) : undefined;
 
+  // Ensure country exists in the country table
+  await prisma.country.upsert({
+    where: { code: countryCode },
+    update: {},
+    create: { code: countryCode, label: countryCode },
+  });
+
   await prisma.trip.create({
     data: {
       user_id: userId,
@@ -52,6 +59,13 @@ export async function PATCH(req: Request) {
   if (!existing) {
     return NextResponse.json({ error: "Trip not found" }, { status: 404 });
   }
+
+  // Ensure country exists in the country table
+  await prisma.country.upsert({
+    where: { code: country_code },
+    update: {},
+    create: { code: country_code, label: country_code },
+  });
 
   // Update the trip
   const updated = await prisma.trip.update({
