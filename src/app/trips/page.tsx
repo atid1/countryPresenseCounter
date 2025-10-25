@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 
 import { requireUserId } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
+import TripsTable from "./TripsTable";
 
 type TripMetric = {
   id: string;
@@ -92,14 +93,51 @@ export default async function TripsPage() {
         }}>
           <h2 style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem'}}>Add Trip</h2>
           <form action="/api/trips" method="post" style={{display:"grid", gap: '1rem'}}>
-            <input type="text" name="countryCode" placeholder="Country (e.g. BE, FR, IL)" required
-              style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
-            <input type="date" name="dateFrom" required
-              style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
-            <input type="date" name="dateTo" required
-              style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
-            <input type="text" name="notes" placeholder="Notes (optional)"
-              style={{padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
+            <div>
+              <label style={{display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', color: '#374151'}}>
+                Country
+              </label>
+              <select name="countryCode" required
+                style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}}>
+                <option value="">Select a country...</option>
+                <option value="IL">Israel (IL)</option>
+                <option value="BE">Belgium (BE)</option>
+                <option value="RO">Romania (RO)</option>
+                <option value="HK">Hong Kong (HK)</option>
+                <option value="CA">Canada (CA)</option>
+                <option value="ZA">South Africa (ZA)</option>
+                <option value="BW">Botswana (BW)</option>
+                <option value="AO">Angola (AO)</option>
+                <option value="NL">Netherlands (NL)</option>
+                <option value="FR">France (FR)</option>
+                <option value="DE">Germany (DE)</option>
+                <option value="ES">Spain (ES)</option>
+                <option value="PT">Portugal (PT)</option>
+                <option value="IT">Italy (IT)</option>
+                <option value="HU">Hungary (HU)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', color: '#374151'}}>
+                From Date
+              </label>
+              <input type="date" name="dateFrom" required
+                style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
+            </div>
+            <div>
+              <label style={{display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', color: '#374151'}}>
+                To Date
+              </label>
+              <input type="date" name="dateTo" required
+                style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
+            </div>
+            <div>
+              <label style={{display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.25rem', color: '#374151'}}>
+                Notes (optional)
+              </label>
+              <input type="text" name="notes"
+                style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '1rem'}} />
+            </div>
             <button type="submit" style={{
               padding: '0.625rem',
               background: '#3b82f6',
@@ -147,61 +185,7 @@ export default async function TripsPage() {
         </div>
       </div>
 
-      {years.map(year => (
-        <div key={year} style={{marginBottom: '3rem'}}>
-          <h2 style={{
-            fontSize: '1.5rem',
-            fontWeight: 600,
-            marginBottom: '1rem',
-            color: '#1f2937'
-          }}>{year}</h2>
-          <div style={{
-            overflowX: 'auto',
-            background: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            width: '100%'
-          }}>
-            <table style={{
-              width: 'max-content',
-              minWidth: '100%',
-              borderCollapse: 'collapse',
-              fontSize: '0.875rem'
-            }}>
-              <thead>
-                <tr style={{background: '#f9fafb', borderBottom: '1px solid #e5e7eb'}}>
-                  <th style={{padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap'}}>From</th>
-                  <th style={{padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap'}}>To</th>
-                  <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Gap to Next</th>
-                  <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}># Days</th>
-                  <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Total for Location</th>
-                  <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Location</th>
-                  <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, whiteSpace: 'nowrap'}}>Belgium Last 2Q</th>
-                  <th style={{padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 600, whiteSpace: 'nowrap', minWidth: '150px'}}>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tripsByYear[year].map(trip => (
-                  <tr key={trip.id} style={{borderBottom: '1px solid #f3f4f6'}}>
-                    <td style={{padding: '0.75rem 1rem', whiteSpace: 'nowrap'}}>{formatDate(trip.date_from)}</td>
-                    <td style={{padding: '0.75rem 1rem', whiteSpace: 'nowrap'}}>{formatDate(trip.date_to)}</td>
-                    <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>{trip.gap_to_next_trip}</td>
-                    <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>{trip.days_inclusive}</td>
-                    <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>{trip.total_for_location_ytd}</td>
-                    <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>{trip.country_code}</td>
-                    <td style={{padding: '0.75rem 1rem', textAlign: 'center', whiteSpace: 'nowrap'}}>{trip.belgium_last_2_quarters ?? ''}</td>
-                    <td style={{
-                      padding: '0.75rem 1rem',
-                      whiteSpace: 'nowrap',
-                      minWidth: '150px'
-                    }}>{trip.notes}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ))}
+      <TripsTable initialMetrics={metrics} />
     </main>
   );
 }
