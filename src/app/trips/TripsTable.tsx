@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useLoading } from "./LoadingContext";
 
 type TripMetric = {
   id: string;
@@ -43,6 +44,16 @@ const COUNTRIES = [
   { code: "HU", name: "Hungary" },
 ];
 
+// Create a mapping from country code to country name
+const COUNTRY_MAP: Record<string, string> = COUNTRIES.reduce((acc, country) => {
+  acc[country.code] = country.name;
+  return acc;
+}, {} as Record<string, string>);
+
+function getCountryName(code: string): string {
+  return COUNTRY_MAP[code] || code;
+}
+
 function formatDate(date: Date): string {
   const day = date.getUTCDate();
   const month = date.getUTCMonth() + 1;
@@ -71,7 +82,11 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
   const [editingTrip, setEditingTrip] = useState<EditingTrip | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
   const editingRowRef = useRef<HTMLTableRowElement>(null);
+  const { isLoading: globalLoading, setLoading } = useLoading();
 
   // Handle clicking outside the editing row
   useEffect(() => {
@@ -103,6 +118,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
   const years = Object.keys(tripsByYear).map(Number).sort((a, b) => b - a);
 
   const startEditing = (trip: TripMetric) => {
+    if (isSaving || deletingId || isDeletingSelected) return;
     setEditingId(trip.id);
     setEditingTrip({
       id: trip.id,
@@ -134,14 +150,14 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
       if (newFrom < otherTo && newTo > otherFrom) {
         const fromStr = formatDate(t.date_from);
         const toStr = formatDate(t.date_to);
-        return `This trip overlaps with existing trip: ${t.country_code} from ${fromStr} to ${toStr}`;
+        return `This trip overlaps with existing trip: ${getCountryName(t.country_code)} from ${fromStr} to ${toStr}`;
       }
     }
     return null;
   };
 
   const saveTrip = async () => {
-    if (!editingTrip) return;
+    if (!editingTrip || isSaving || globalLoading) return;
 
     const dateFrom = new Date(editingTrip.date_from);
     const dateTo = new Date(editingTrip.date_to);
@@ -157,6 +173,9 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
       setError(overlapError);
       return;
     }
+
+    setIsSaving(true);
+    setLoading(true);
 
     try {
       const response = await fetch("/api/trips", {
@@ -174,6 +193,8 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
       if (!response.ok) {
         const data = await response.json();
         setError(data.error || "Failed to update trip");
+        setIsSaving(false);
+        setLoading(false);
         return;
       }
 
@@ -181,11 +202,17 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
       window.location.reload();
     } catch (err) {
       setError("Failed to save trip");
+      setIsSaving(false);
+      setLoading(false);
     }
   };
 
   const deleteTrip = async (tripId: string) => {
+    if (deletingId || isDeletingSelected || globalLoading) return;
     if (!confirm("Are you sure you want to delete this trip?")) return;
+
+    setDeletingId(tripId);
+    setLoading(true);
 
     try {
       const response = await fetch(`/api/trips?id=${tripId}`, {
@@ -194,6 +221,8 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
 
       if (!response.ok) {
         alert("Failed to delete trip");
+        setDeletingId(null);
+        setLoading(false);
         return;
       }
 
@@ -201,6 +230,8 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
       window.location.reload();
     } catch (err) {
       alert("Failed to delete trip");
+      setDeletingId(null);
+      setLoading(false);
     }
   };
 
@@ -228,10 +259,13 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
   };
 
   const deleteSelectedTrips = async () => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0 || isDeletingSelected || deletingId || globalLoading) return;
 
     const count = selectedIds.size;
     if (!confirm(`Are you sure you want to delete ${count} trip${count > 1 ? 's' : ''}?`)) return;
+
+    setIsDeletingSelected(true);
+    setLoading(true);
 
     try {
       const response = await fetch('/api/trips', {
@@ -242,6 +276,8 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
 
       if (!response.ok) {
         alert("Failed to delete trips");
+        setIsDeletingSelected(false);
+        setLoading(false);
         return;
       }
 
@@ -249,6 +285,8 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
       window.location.reload();
     } catch (err) {
       alert("Failed to delete trips");
+      setIsDeletingSelected(false);
+      setLoading(false);
     }
   };
 
@@ -283,18 +321,19 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
           </span>
           <button
             onClick={deleteSelectedTrips}
+            disabled={isDeletingSelected || deletingId !== null || isSaving}
             style={{
               padding: '0.5rem 1rem',
-              background: '#ef4444',
+              background: (isDeletingSelected || deletingId !== null || isSaving) ? '#9ca3af' : '#ef4444',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               fontSize: '0.875rem',
               fontWeight: 500,
-              cursor: 'pointer'
+              cursor: (isDeletingSelected || deletingId !== null || isSaving) ? 'not-allowed' : 'pointer'
             }}
           >
-            Delete Selected
+            {isDeletingSelected ? 'Deleting...' : 'Delete Selected'}
           </button>
         </div>
       )}
@@ -334,12 +373,12 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                         style={{cursor: 'pointer', width: '16px', height: '16px'}}
                       />
                     </th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '75px'}}>Location</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '130px'}}>Location</th>
                     <th style={{padding: '0.75rem 0.5rem', textAlign: 'left', fontWeight: 600, width: '140px'}}>From</th>
                     <th style={{padding: '0.75rem 0.5rem', textAlign: 'left', fontWeight: 600, width: '140px'}}>To</th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '60px'}}>Days</th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '65px'}}>Total</th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '70px'}}>BE 2Q</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '60px'}}>Trip Days</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '65px'}}>Total per Location</th>
+                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '70px'}}>Belgium last 2Q</th>
                     <th style={{padding: '0.75rem 1.5rem', textAlign: 'left', fontWeight: 600, width: '400px'}}>Notes</th>
                     <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, width: '180px'}}>Actions</th>
                   </tr>
@@ -420,29 +459,31 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                           <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
                             <button
                               onClick={saveTrip}
+                              disabled={isSaving || deletingId !== null || isDeletingSelected}
                               style={{
                                 padding: '0.375rem 0.75rem',
-                                background: '#10b981',
+                                background: (isSaving || deletingId !== null || isDeletingSelected) ? '#9ca3af' : '#10b981',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
                                 fontSize: '0.75rem',
-                                cursor: 'pointer',
+                                cursor: (isSaving || deletingId !== null || isDeletingSelected) ? 'not-allowed' : 'pointer',
                                 marginRight: '0.375rem'
                               }}
                             >
-                              Save
+                              {isSaving ? 'Saving...' : 'Save'}
                             </button>
                             <button
                               onClick={cancelEditing}
+                              disabled={isSaving || deletingId !== null || isDeletingSelected}
                               style={{
                                 padding: '0.375rem 0.75rem',
-                                background: '#6b7280',
+                                background: (isSaving || deletingId !== null || isDeletingSelected) ? '#9ca3af' : '#6b7280',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '4px',
                                 fontSize: '0.75rem',
-                                cursor: 'pointer'
+                                cursor: (isSaving || deletingId !== null || isDeletingSelected) ? 'not-allowed' : 'pointer'
                               }}
                             >
                               Cancel
@@ -483,7 +524,7 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                           />
                         </td>
                         <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>
-                          {trip.country_code}
+                          {getCountryName(trip.country_code)}
                           {hasRedGap && (
                             <div style={{
                               fontSize: '0.7rem',
@@ -507,17 +548,18 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                               e.stopPropagation();
                               deleteTrip(trip.id);
                             }}
+                            disabled={deletingId !== null || isDeletingSelected || isSaving}
                             style={{
                               padding: '0.375rem 0.75rem',
-                              background: '#ef4444',
+                              background: (deletingId !== null || isDeletingSelected || isSaving) ? '#9ca3af' : '#ef4444',
                               color: 'white',
                               border: 'none',
                               borderRadius: '4px',
                               fontSize: '0.75rem',
-                              cursor: 'pointer'
+                              cursor: (deletingId !== null || isDeletingSelected || isSaving) ? 'not-allowed' : 'pointer'
                             }}
                           >
-                            Delete
+                            {deletingId === trip.id ? 'Deleting...' : 'Delete'}
                           </button>
                         </td>
                       </tr>

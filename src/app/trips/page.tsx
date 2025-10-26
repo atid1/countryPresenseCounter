@@ -3,9 +3,7 @@ export const runtime = "nodejs";
 
 import { requireUserId } from "@/src/lib/auth";
 import { prisma } from "@/src/lib/prisma";
-import TripsTable from "./TripsTable";
-import AddTripForm from "./AddTripForm";
-import ImportForm from "./ImportForm";
+import TripsPageClient from "./TripsPageClient";
 
 type TripMetric = {
   id: string;
@@ -82,73 +80,13 @@ export default async function TripsPage({
   const years = Object.keys(tripsByYear).map(Number).sort((a, b) => b - a);
 
   return (
-    <main style={{
-      maxWidth: '100%',
-      padding: '2rem 2rem 2rem 1rem',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <h1 style={{fontSize: '2rem', fontWeight: 600, marginBottom: '2rem'}}>Trips</h1>
-
-      {error && (
-        <div style={{
-          background: '#fee2e2',
-          border: '1px solid #ef4444',
-          borderRadius: '8px',
-          padding: '1rem',
-          marginBottom: '2rem',
-          color: '#dc2626',
-          fontSize: '0.875rem',
-          fontWeight: 500
-        }}>
-          {error === 'invalid_dates'
-            ? 'End date cannot be before start date'
-            : error}
-        </div>
-      )}
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '2rem',
-        marginBottom: '3rem'
-      }}>
-        <div style={{
-          background: 'white',
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-          padding: '1.5rem'
-        }}>
-          <h2 style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem'}}>Add Trip</h2>
-          <AddTripForm
-            prefillCountryCode={prefillCountryCode}
-            prefillDateFrom={prefillDateFrom}
-            prefillDateTo={prefillDateTo}
-            prefillNotes={prefillNotes}
-          />
-        </div>
-
-        <div style={{
-          background: 'white',
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-          padding: '1.5rem'
-        }}>
-          <h2 style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem'}}>Import / Export</h2>
-          <ImportForm />
-          <a href="/api/export" style={{
-            display: 'inline-block',
-            padding: '0.5rem 1rem',
-            background: '#6366f1',
-            color: 'white',
-            textDecoration: 'none',
-            borderRadius: '4px',
-            fontSize: '0.875rem',
-            fontWeight: 500
-          }}>Export CSV</a>
-        </div>
-      </div>
-
-      <TripsTable initialMetrics={metrics} />
-    </main>
+    <TripsPageClient
+      metrics={metrics}
+      error={error}
+      prefillCountryCode={prefillCountryCode}
+      prefillDateFrom={prefillDateFrom}
+      prefillDateTo={prefillDateTo}
+      prefillNotes={prefillNotes}
+    />
   );
 }

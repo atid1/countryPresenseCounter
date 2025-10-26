@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useLoading } from "./LoadingContext";
 
 type ImportError = {
   row: number;
@@ -12,9 +13,11 @@ export default function ImportForm() {
   const [errors, setErrors] = useState<ImportError[] | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isLoading: globalLoading, setLoading } = useLoading();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (globalLoading) return;
 
     const formData = new FormData(e.currentTarget);
     const file = formData.get("file") as File | null;
@@ -25,6 +28,7 @@ export default function ImportForm() {
     }
 
     setIsUploading(true);
+    setLoading(true);
     setErrors(null);
 
     try {
@@ -50,6 +54,7 @@ export default function ImportForm() {
           alert(data.error || "Failed to import CSV");
         }
         setIsUploading(false);
+        setLoading(false);
         return;
       }
 
@@ -61,6 +66,7 @@ export default function ImportForm() {
       if (!response.ok) {
         alert(data?.error || "Failed to import CSV");
         setIsUploading(false);
+        setLoading(false);
         return;
       }
 
@@ -68,6 +74,7 @@ export default function ImportForm() {
     } catch (err) {
       alert("Failed to upload CSV");
       setIsUploading(false);
+      setLoading(false);
     }
   };
 
@@ -88,21 +95,21 @@ export default function ImportForm() {
           type="file"
           name="file"
           accept=".csv"
-          disabled={isUploading}
+          disabled={isUploading || globalLoading}
           style={{marginBottom: '0.75rem', fontSize: '0.875rem'}}
         />
         <button
           type="submit"
-          disabled={isUploading}
+          disabled={isUploading || globalLoading}
           style={{
             padding: '0.5rem 1rem',
-            background: isUploading ? '#9ca3af' : '#10b981',
+            background: (isUploading || globalLoading) ? '#9ca3af' : '#10b981',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
             fontSize: '0.875rem',
             fontWeight: 500,
-            cursor: isUploading ? 'not-allowed' : 'pointer'
+            cursor: (isUploading || globalLoading) ? 'not-allowed' : 'pointer'
           }}
         >
           {isUploading ? 'Uploading...' : 'Upload CSV'}
