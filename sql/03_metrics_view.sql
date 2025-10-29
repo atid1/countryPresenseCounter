@@ -77,3 +77,6 @@ select
   six_month_back_date,
   belgium_last_2_quarters
 from belgium_sum;
+
+alter view public.trip_metrics
+  set (security_invoker = true);
