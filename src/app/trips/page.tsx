@@ -27,12 +27,16 @@ function formatDate(date: Date): string {
   return `${day}/${month}/${year}`;
 }
 
+
+// ...
+
 export default async function TripsPage({
   searchParams,
 }: {
   searchParams: { error?: string; countryCode?: string; dateFrom?: string; dateTo?: string; notes?: string };
 }) {
   const userId = await requireUserId();
+
   const error = searchParams.error;
   const prefillCountryCode = searchParams.countryCode || "";
   const prefillDateFrom = searchParams.dateFrom || "";

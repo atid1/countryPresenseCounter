@@ -51,17 +51,8 @@ export default function ExportButton() {
     <button
       onClick={handleExport}
       disabled={isExporting || globalLoading}
-      style={{
-        display: 'inline-block',
-        padding: '0.5rem 1rem',
-        background: (isExporting || globalLoading) ? '#9ca3af' : '#6366f1',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        fontSize: '0.875rem',
-        fontWeight: 500,
-        cursor: (isExporting || globalLoading) ? 'not-allowed' : 'pointer'
-      }}
+      className="btn btn-primary"
+      style={{ width: '100%' }}
     >
       {isExporting ? 'Exporting...' : 'Export CSV'}
     </button>

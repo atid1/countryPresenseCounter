@@ -12,6 +12,7 @@ export default function ImportForm() {
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<ImportError[] | null>(null);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [hasFile, setHasFile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isLoading: globalLoading, setLoading } = useLoading();
 
@@ -81,6 +82,7 @@ export default function ImportForm() {
   const closeDialog = () => {
     setShowErrorDialog(false);
     setErrors(null);
+    setHasFile(false);
     // Reset the file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -89,28 +91,21 @@ export default function ImportForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} style={{marginBottom: '1rem'}}>
+      <form onSubmit={handleSubmit} className="mb-4">
         <input
           ref={fileInputRef}
           type="file"
           name="file"
           accept=".csv"
+          onChange={(e) => setHasFile(!!e.target.files?.length)}
           disabled={isUploading || globalLoading}
-          style={{marginBottom: '0.75rem', fontSize: '0.875rem'}}
+          className="block w-full text-sm text-slate-500 mb-3 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          style={{ marginBottom: '0.75rem' }}
         />
         <button
           type="submit"
-          disabled={isUploading || globalLoading}
-          style={{
-            padding: '0.5rem 1rem',
-            background: (isUploading || globalLoading) ? '#9ca3af' : '#10b981',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            cursor: (isUploading || globalLoading) ? 'not-allowed' : 'pointer'
-          }}
+          disabled={!hasFile || isUploading || globalLoading}
+          className="btn btn-primary"
         >
           {isUploading ? 'Uploading...' : 'Upload CSV'}
         </button>
@@ -139,28 +134,25 @@ export default function ImportForm() {
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            background: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
-            maxWidth: '600px',
+            zIndex: 1001,
             width: '90%',
+            maxWidth: '600px',
             maxHeight: '80vh',
             display: 'flex',
-            flexDirection: 'column',
-            zIndex: 1001,
-          }}>
+            flexDirection: 'column'
+          }} className="card">
             {/* Header */}
             <div style={{
-              padding: '1.5rem',
-              borderBottom: '1px solid #e5e7eb',
+              borderBottom: '1px solid var(--border)',
+              paddingBottom: '1rem',
+              marginBottom: '1rem',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
             }}>
               <h2 style={{
                 fontSize: '1.25rem',
-                fontWeight: 600,
-                color: '#dc2626',
+                color: 'var(--danger)',
                 margin: 0
               }}>
                 CSV Import Errors
@@ -171,18 +163,11 @@ export default function ImportForm() {
                   background: 'transparent',
                   border: 'none',
                   fontSize: '1.5rem',
-                  color: '#6b7280',
+                  color: 'var(--text-secondary)',
                   cursor: 'pointer',
                   padding: '0',
-                  width: '32px',
-                  height: '32px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '4px'
+                  lineHeight: 1
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 ×
               </button>
@@ -190,70 +175,44 @@ export default function ImportForm() {
 
             {/* Error List */}
             <div style={{
-              padding: '1.5rem',
               overflowY: 'auto',
-              flex: 1
+              flex: 1,
+              paddingRight: '0.5rem'
             }}>
-              <p style={{
-                marginBottom: '1rem',
-                color: '#374151',
-                fontSize: '0.875rem'
-              }}>
+              <p className="text-sm text-muted mb-4">
                 The following errors were found in your CSV file:
               </p>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem'
-              }}>
-                {errors.map((error, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: '#fee2e2',
-                      border: '1px solid #fca5a5',
-                      borderRadius: '4px',
-                      padding: '0.75rem'
-                    }}
-                  >
-                    <div style={{
-                      fontWeight: 600,
-                      color: '#991b1b',
-                      fontSize: '0.875rem',
-                      marginBottom: '0.25rem'
-                    }}>
-                      Row {error.row}
-                    </div>
-                    <div style={{
-                      color: '#dc2626',
-                      fontSize: '0.875rem'
-                    }}>
-                      {error.message}
-                    </div>
-                  </div>
-                ))}
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '100px' }}>Row</th>
+                      <th>Error</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {errors.map((error, idx) => (
+                      <tr key={idx}>
+                        <td style={{ fontWeight: 600 }}>Row {error.row}</td>
+                        <td style={{ color: 'var(--danger)' }}>{error.message}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
             {/* Footer */}
             <div style={{
-              padding: '1.5rem',
-              borderTop: '1px solid #e5e7eb',
+              borderTop: '1px solid var(--border)',
+              paddingTop: '1rem',
+              marginTop: '1rem',
               display: 'flex',
               justifyContent: 'flex-end'
             }}>
               <button
                 onClick={closeDialog}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  cursor: 'pointer'
-                }}
+                className="btn btn-primary"
               >
                 Close
               </button>

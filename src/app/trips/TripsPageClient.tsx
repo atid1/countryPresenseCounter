@@ -40,21 +40,19 @@ export default function TripsPageClient({
 }: TripsPageClientProps) {
   return (
     <LoadingProvider>
-      <main style={{
-        maxWidth: '100%',
-        padding: '2rem 2rem 2rem 1rem',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-      }}>
-        <h1 style={{fontSize: '2rem', fontWeight: 600, marginBottom: '2rem'}}>Trips</h1>
+      <main>
+        <div className="flex items-center justify-between mb-8">
+          <h1>Trips</h1>
+        </div>
 
         {error && (
           <div style={{
-            background: '#fee2e2',
-            border: '1px solid #ef4444',
-            borderRadius: '8px',
+            background: 'var(--danger-light)',
+            border: '1px solid var(--danger)',
+            borderRadius: 'var(--radius-md)',
             padding: '1rem',
             marginBottom: '2rem',
-            color: '#dc2626',
+            color: 'var(--danger)',
             fontSize: '0.875rem',
             fontWeight: 500
           }}>
@@ -64,19 +62,9 @@ export default function TripsPageClient({
           </div>
         )}
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '2rem',
-          marginBottom: '3rem'
-        }}>
-          <div style={{
-            background: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '1.5rem'
-          }}>
-            <h2 style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem'}}>Add Trip</h2>
+        <div className="grid grid-cols-2 gap-8 mb-12">
+          <div className="card">
+            <h2 className="mb-4">Add Trip</h2>
             <AddTripForm
               prefillCountryCode={prefillCountryCode}
               prefillDateFrom={prefillDateFrom}
@@ -91,15 +79,14 @@ export default function TripsPageClient({
             />
           </div>
 
-          <div style={{
-            background: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '8px',
-            padding: '1.5rem'
-          }}>
-            <h2 style={{fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem'}}>Import / Export</h2>
-            <ImportForm />
-            <ExportButton />
+          <div className="card">
+            <h2 className="mb-4">Import / Export</h2>
+            <div className="flex flex-col gap-4">
+              <ImportForm />
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <ExportButton />
+              </div>
+            </div>
           </div>
         </div>
 

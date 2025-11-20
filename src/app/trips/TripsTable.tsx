@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useLoading } from "./LoadingContext";
 
 type TripMetric = {
@@ -77,6 +78,7 @@ function getGapDays(currentTrip: TripMetric, nextTrip: TripMetric | undefined): 
 }
 
 export default function TripsTable({ initialMetrics }: { initialMetrics: TripMetric[] }) {
+  const router = useRouter();
   const [metrics, setMetrics] = useState<TripMetric[]>(initialMetrics);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTrip, setEditingTrip] = useState<EditingTrip | null>(null);
@@ -87,6 +89,11 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
   const editingRowRef = useRef<HTMLTableRowElement>(null);
   const { isLoading: globalLoading, setLoading } = useLoading();
+
+  // Update metrics when initialMetrics changes (after router.refresh())
+  useEffect(() => {
+    setMetrics(initialMetrics);
+  }, [initialMetrics]);
 
   // Handle clicking outside the editing row
   useEffect(() => {
@@ -158,6 +165,24 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
 
   const saveTrip = async () => {
     if (!editingTrip || isSaving || globalLoading) return;
+
+    // Check if changes were made
+    const originalTrip = metrics.find(t => t.id === editingTrip.id);
+    if (originalTrip) {
+      const originalDateFrom = toInputDate(originalTrip.date_from);
+      const originalDateTo = toInputDate(originalTrip.date_to);
+      const originalNotes = originalTrip.notes || "";
+
+      if (
+        originalTrip.country_code === editingTrip.country_code &&
+        originalDateFrom === editingTrip.date_from &&
+        originalDateTo === editingTrip.date_to &&
+        originalNotes === editingTrip.notes
+      ) {
+        cancelEditing();
+        return;
+      }
+    }
 
     const dateFrom = new Date(editingTrip.date_from);
     const dateTo = new Date(editingTrip.date_to);
@@ -294,12 +319,12 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
     <>
       {error && (
         <div style={{
-          background: '#fee2e2',
-          border: '1px solid #ef4444',
-          borderRadius: '4px',
+          background: 'var(--danger-light)',
+          border: '1px solid var(--danger)',
+          borderRadius: 'var(--radius-md)',
           padding: '0.75rem',
           marginBottom: '1rem',
-          color: '#dc2626'
+          color: 'var(--danger)'
         }}>
           {error}
         </div>
@@ -307,31 +332,22 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
 
       {selectedIds.size > 0 && (
         <div style={{
-          background: '#eff6ff',
-          border: '1px solid #3b82f6',
-          borderRadius: '4px',
+          background: 'var(--primary-light)',
+          border: '1px solid var(--primary)',
+          borderRadius: 'var(--radius-md)',
           padding: '0.75rem',
           marginBottom: '1rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <span style={{color: '#1e40af', fontWeight: 500}}>
+          <span style={{ color: 'var(--primary-hover)', fontWeight: 500 }}>
             {selectedIds.size} trip{selectedIds.size > 1 ? 's' : ''} selected
           </span>
           <button
             onClick={deleteSelectedTrips}
             disabled={isDeletingSelected || deletingId !== null || isSaving}
-            style={{
-              padding: '0.5rem 1rem',
-              background: (isDeletingSelected || deletingId !== null || isSaving) ? '#9ca3af' : '#ef4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: (isDeletingSelected || deletingId !== null || isSaving) ? 'not-allowed' : 'pointer'
-            }}
+            className="btn btn-danger"
           >
             {isDeletingSelected ? 'Deleting...' : 'Delete Selected'}
           </button>
@@ -341,46 +357,29 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
       {years.map(year => {
         const yearTrips = tripsByYear[year];
         return (
-          <div key={year} style={{marginBottom: '3rem'}}>
-            <h2 style={{
-              fontSize: '1.5rem',
-              fontWeight: 600,
-              marginBottom: '1rem',
-              color: '#1f2937'
-            }}>{year}</h2>
-            <div style={{
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              width: '100%',
-              overflow: 'hidden'
-            }}>
-              <table style={{
-                width: '100%',
-                tableLayout: 'fixed',
-                borderCollapse: 'collapse',
-                fontSize: '0.875rem',
-                border: 'none'
-              }}>
+          <div key={year} className="mb-12">
+            <h2 className="mb-4">{year}</h2>
+            <div className="table-container">
+              <table className="table">
                 <thead>
-                  <tr style={{background: '#f9fafb', borderBottom: '1px solid #e5e7eb'}}>
-                    <th style={{padding: '0.75rem', textAlign: 'center', fontWeight: 600, width: '50px'}}>
+                  <tr>
+                    <th style={{ width: '50px', textAlign: 'center' }}>
                       <input
                         type="checkbox"
                         checked={yearTrips.every(t => selectedIds.has(t.id))}
                         onChange={() => toggleSelectAll(yearTrips)}
                         spellCheck={false}
-                        style={{cursor: 'pointer', width: '16px', height: '16px'}}
+                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                       />
                     </th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '130px'}}>Location</th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'left', fontWeight: 600, width: '140px'}}>From</th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'left', fontWeight: 600, width: '140px'}}>To</th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '60px'}}>Trip Days</th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '65px'}}>Total per Location</th>
-                    <th style={{padding: '0.75rem 0.5rem', textAlign: 'center', fontWeight: 600, width: '70px'}}>Belgium last 2Q</th>
-                    <th style={{padding: '0.75rem 1.5rem', textAlign: 'left', fontWeight: 600, width: '400px'}}>Notes</th>
-                    <th style={{padding: '0.75rem 1rem', textAlign: 'center', fontWeight: 600, width: '180px'}}>Actions</th>
+                    <th style={{ width: '130px', textAlign: 'center' }}>Location</th>
+                    <th style={{ width: '140px' }}>From</th>
+                    <th style={{ width: '140px' }}>To</th>
+                    <th style={{ width: '60px', textAlign: 'center' }}>Days</th>
+                    <th style={{ width: '65px', textAlign: 'center' }}>Total YTD</th>
+                    <th style={{ width: '70px', textAlign: 'center' }}>BE 2Q</th>
+                    <th style={{ width: '400px' }}>Notes</th>
+                    <th style={{ width: '180px', textAlign: 'center' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -395,9 +394,9 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                         <tr
                           ref={editingRowRef}
                           key={trip.id}
-                          style={{borderBottom: '1px solid #f3f4f6', background: '#eff6ff'}}
+                          style={{ background: 'var(--surface-hover)' }}
                         >
-                          <td style={{padding: '0.75rem', textAlign: 'center'}}>
+                          <td style={{ textAlign: 'center' }}>
                             <input
                               type="checkbox"
                               checked={selectedIds.has(trip.id)}
@@ -406,88 +405,104 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                                 toggleSelectTrip(trip.id);
                               }}
                               spellCheck={false}
-                              style={{cursor: 'pointer', width: '16px', height: '16px'}}
+                              style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                             />
                           </td>
-                          <td style={{padding: '0.75rem 0.5rem'}}>
+                          <td>
                             <select
                               value={editingTrip.country_code}
-                              onChange={(e) => setEditingTrip({...editingTrip, country_code: e.target.value})}
+                              onChange={(e) => setEditingTrip({ ...editingTrip, country_code: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  saveTrip();
+                                }
+                              }}
                               autoFocus
-                              style={{width: '100%', padding: '0.375rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
+                              className="select"
+                              style={{ padding: '0.25rem' }}
                             >
                               {COUNTRIES.map(c => (
                                 <option key={c.code} value={c.code}>{c.code}</option>
                               ))}
                             </select>
                           </td>
-                          <td style={{padding: '0.75rem 0.5rem'}}>
+                          <td>
                             <input
                               type="date"
                               value={editingTrip.date_from}
-                              onChange={(e) => setEditingTrip({...editingTrip, date_from: e.target.value})}
-                              spellCheck={false}
-                              style={{width: '100%', padding: '0.375rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
-                            />
-                          </td>
-                          <td style={{padding: '0.75rem 0.5rem'}}>
-                            <input
-                              type="date"
-                              value={editingTrip.date_to}
-                              onChange={(e) => setEditingTrip({...editingTrip, date_to: e.target.value})}
-                              spellCheck={false}
-                              style={{width: '100%', padding: '0.375rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
-                            />
-                          </td>
-                          <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.days_inclusive}</td>
-                          <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.total_for_location_ytd}</td>
-                          <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.belgium_last_2_quarters ?? ''}</td>
-                          <td style={{padding: '0.75rem 1.5rem'}}>
-                            <input
-                              type="text"
-                              value={editingTrip.notes}
-                              onChange={(e) => setEditingTrip({...editingTrip, notes: e.target.value})}
+                              onChange={(e) => {
+                                setEditingTrip({ ...editingTrip, date_from: e.target.value });
+                                setError(null);
+                              }}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
+                                  e.preventDefault();
                                   saveTrip();
                                 }
                               }}
                               spellCheck={false}
-                              style={{width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '0.875rem'}}
+                              className="input"
+                              style={{ padding: '0.25rem' }}
                             />
                           </td>
-                          <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
-                            <button
-                              onClick={saveTrip}
-                              disabled={isSaving || deletingId !== null || isDeletingSelected}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                background: (isSaving || deletingId !== null || isDeletingSelected) ? '#9ca3af' : '#10b981',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                fontSize: '0.75rem',
-                                cursor: (isSaving || deletingId !== null || isDeletingSelected) ? 'not-allowed' : 'pointer',
-                                marginRight: '0.375rem'
+                          <td>
+                            <input
+                              type="date"
+                              value={editingTrip.date_to}
+                              onChange={(e) => {
+                                setEditingTrip({ ...editingTrip, date_to: e.target.value });
+                                setError(null);
                               }}
-                            >
-                              {isSaving ? 'Saving...' : 'Save'}
-                            </button>
-                            <button
-                              onClick={cancelEditing}
-                              disabled={isSaving || deletingId !== null || isDeletingSelected}
-                              style={{
-                                padding: '0.375rem 0.75rem',
-                                background: (isSaving || deletingId !== null || isDeletingSelected) ? '#9ca3af' : '#6b7280',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                fontSize: '0.75rem',
-                                cursor: (isSaving || deletingId !== null || isDeletingSelected) ? 'not-allowed' : 'pointer'
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  saveTrip();
+                                }
                               }}
-                            >
-                              Cancel
-                            </button>
+                              spellCheck={false}
+                              className="input"
+                              style={{ padding: '0.25rem' }}
+                            />
+                          </td>
+                          <td style={{ textAlign: 'center' }}>{trip.days_inclusive}</td>
+                          <td style={{ textAlign: 'center' }}>{trip.total_for_location_ytd}</td>
+                          <td style={{ textAlign: 'center' }}>{trip.belgium_last_2_quarters ?? ''}</td>
+                          <td>
+                            <input
+                              type="text"
+                              value={editingTrip.notes}
+                              onChange={(e) => setEditingTrip({ ...editingTrip, notes: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  saveTrip();
+                                }
+                              }}
+                              spellCheck={false}
+                              className="input"
+                              style={{ padding: '0.25rem' }}
+                            />
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={saveTrip}
+                                disabled={isSaving || deletingId !== null || isDeletingSelected}
+                                className="btn btn-primary"
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                              >
+                                {isSaving ? 'Saving...' : 'Save'}
+                              </button>
+                              <button
+                                onClick={cancelEditing}
+                                disabled={isSaving || deletingId !== null || isDeletingSelected}
+                                className="btn btn-secondary"
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -498,19 +513,11 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                         key={trip.id}
                         onClick={() => startEditing(trip)}
                         style={{
-                          borderBottom: '1px solid #f3f4f6',
                           cursor: 'pointer',
-                          background: hasRedGap ? '#fee2e2' : 'transparent',
-                          transition: 'background 0.15s'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!hasRedGap) e.currentTarget.style.background = '#f9fafb';
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!hasRedGap) e.currentTarget.style.background = 'transparent';
+                          background: hasRedGap ? 'var(--danger-light)' : undefined
                         }}
                       >
-                        <td style={{padding: '0.75rem', textAlign: 'center'}}>
+                        <td style={{ textAlign: 'center' }}>
                           <input
                             type="checkbox"
                             checked={selectedIds.has(trip.id)}
@@ -520,44 +527,32 @@ export default function TripsTable({ initialMetrics }: { initialMetrics: TripMet
                             }}
                             onClick={(e) => e.stopPropagation()}
                             spellCheck={false}
-                            style={{cursor: 'pointer', width: '16px', height: '16px'}}
+                            style={{ cursor: 'pointer', width: '16px', height: '16px' }}
                           />
                         </td>
-                        <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>
+                        <td style={{ textAlign: 'center' }}>
                           {getCountryName(trip.country_code)}
                           {hasRedGap && (
-                            <div style={{
-                              fontSize: '0.7rem',
-                              color: '#dc2626',
-                              fontWeight: 600,
-                              marginTop: '0.25rem'
-                            }}>
+                            <div className="badge badge-red" style={{ marginTop: '0.25rem' }}>
                               Gap: {gapDays} days
                             </div>
                           )}
                         </td>
-                        <td style={{padding: '0.75rem 0.5rem'}}>{formatDate(trip.date_from)}</td>
-                        <td style={{padding: '0.75rem 0.5rem'}}>{formatDate(trip.date_to)}</td>
-                        <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.days_inclusive}</td>
-                        <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.total_for_location_ytd}</td>
-                        <td style={{padding: '0.75rem 0.5rem', textAlign: 'center'}}>{trip.belgium_last_2_quarters ?? ''}</td>
-                        <td style={{padding: '0.75rem 1.5rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{trip.notes}</td>
-                        <td style={{padding: '0.75rem 1rem', textAlign: 'center'}}>
+                        <td>{formatDate(trip.date_from)}</td>
+                        <td>{formatDate(trip.date_to)}</td>
+                        <td style={{ textAlign: 'center' }}>{trip.days_inclusive}</td>
+                        <td style={{ textAlign: 'center' }}>{trip.total_for_location_ytd}</td>
+                        <td style={{ textAlign: 'center' }}>{trip.belgium_last_2_quarters ?? ''}</td>
+                        <td style={{ maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{trip.notes}</td>
+                        <td style={{ textAlign: 'center' }}>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteTrip(trip.id);
                             }}
                             disabled={deletingId !== null || isDeletingSelected || isSaving}
-                            style={{
-                              padding: '0.375rem 0.75rem',
-                              background: (deletingId !== null || isDeletingSelected || isSaving) ? '#9ca3af' : '#ef4444',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              fontSize: '0.75rem',
-                              cursor: (deletingId !== null || isDeletingSelected || isSaving) ? 'not-allowed' : 'pointer'
-                            }}
+                            className="btn btn-danger-outline"
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}
                           >
                             {deletingId === trip.id ? 'Deleting...' : 'Delete'}
                           </button>

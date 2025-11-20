@@ -1,14 +1,27 @@
+import "./globals.css";
+
 export const metadata = { title: "Days per Country" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en"><body style={{margin:0, padding:0}}>
-      <nav style={{display:"flex", gap:12, marginBottom:16, padding: "20px 20px 0 20px"}}>
-        <a href="/">Home</a>
-        <a href="/trips">Trips</a>
-        <a href="/login">Login</a>
-      </nav>
-      {children}
-    </body></html>
+    <html lang="en">
+      <body>
+        <nav className="navbar">
+          <div className="nav-container">
+            <div className="nav-brand">
+              <span>🌍</span> Days per Country
+            </div>
+            <div className="nav-links">
+              <a href="/" className="nav-link">Home</a>
+              <a href="/trips" className="nav-link">Trips</a>
+              <a href="/login" className="nav-link">Login</a>
+            </div>
+          </div>
+        </nav>
+        <div className="container main-content">
+          {children}
+        </div>
+      </body>
+    </html>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLoading } from "./LoadingContext";
 
 type AddTripFormProps = {
@@ -23,6 +24,7 @@ export default function AddTripForm({
   prefillNotes = "",
   existingTrips,
 }: AddTripFormProps) {
+  const router = useRouter();
   const [dateFrom, setDateFrom] = useState(prefillDateFrom);
   const [dateTo, setDateTo] = useState(prefillDateTo);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -130,8 +132,8 @@ export default function AddTripForm({
         return;
       }
 
-      // Redirect to trips page (will reload)
-      window.location.href = "/trips";
+      // Refresh the page
+      window.location.reload();
     } catch (err) {
       setError("Failed to add trip");
       setIsSubmitting(false);
@@ -140,29 +142,22 @@ export default function AddTripForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
+    <form onSubmit={handleSubmit}>
       {error && (
         <div style={{
-          background: '#fee2e2',
-          border: '1px solid #ef4444',
-          borderRadius: '4px',
+          background: 'var(--danger-light)',
+          border: '1px solid var(--danger)',
+          borderRadius: 'var(--radius-md)',
           padding: '0.75rem',
-          color: '#dc2626',
-          fontSize: '0.875rem'
+          color: 'var(--danger)',
+          fontSize: '0.875rem',
+          marginBottom: '1rem'
         }}>
           {error}
         </div>
       )}
-      <div>
-        <label
-          style={{
-            display: "block",
-            fontSize: "0.875rem",
-            fontWeight: 500,
-            marginBottom: "0.25rem",
-            color: "#374151",
-          }}
-        >
+      <div className="input-group">
+        <label className="label">
           Country
         </label>
         <select
@@ -170,13 +165,7 @@ export default function AddTripForm({
           required
           disabled={isSubmitting || globalLoading}
           defaultValue={prefillCountryCode}
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            border: "1px solid #d1d5db",
-            borderRadius: "4px",
-            fontSize: "1rem",
-          }}
+          className="select"
         >
           <option value="">Select a country...</option>
           <option value="IL">Israel (IL)</option>
@@ -196,16 +185,8 @@ export default function AddTripForm({
           <option value="HU">Hungary (HU)</option>
         </select>
       </div>
-      <div>
-        <label
-          style={{
-            display: "block",
-            fontSize: "0.875rem",
-            fontWeight: 500,
-            marginBottom: "0.25rem",
-            color: "#374151",
-          }}
-        >
+      <div className="input-group">
+        <label className="label">
           From Date
         </label>
         <input
@@ -216,25 +197,11 @@ export default function AddTripForm({
           value={dateFrom}
           onChange={handleDateFromChange}
           spellCheck={false}
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            border: "1px solid #d1d5db",
-            borderRadius: "4px",
-            fontSize: "1rem",
-          }}
+          className="input"
         />
       </div>
-      <div>
-        <label
-          style={{
-            display: "block",
-            fontSize: "0.875rem",
-            fontWeight: 500,
-            marginBottom: "0.25rem",
-            color: "#374151",
-          }}
-        >
+      <div className="input-group">
+        <label className="label">
           To Date
         </label>
         <input
@@ -248,25 +215,11 @@ export default function AddTripForm({
             setError(null); // Clear error when user changes dates
           }}
           spellCheck={false}
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            border: "1px solid #d1d5db",
-            borderRadius: "4px",
-            fontSize: "1rem",
-          }}
+          className="input"
         />
       </div>
-      <div>
-        <label
-          style={{
-            display: "block",
-            fontSize: "0.875rem",
-            fontWeight: 500,
-            marginBottom: "0.25rem",
-            color: "#374151",
-          }}
-        >
+      <div className="input-group">
+        <label className="label">
           Notes (optional)
         </label>
         <input
@@ -275,28 +228,14 @@ export default function AddTripForm({
           disabled={isSubmitting || globalLoading}
           defaultValue={prefillNotes}
           spellCheck={false}
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            border: "1px solid #d1d5db",
-            borderRadius: "4px",
-            fontSize: "1rem",
-          }}
+          className="input"
         />
       </div>
       <button
         type="submit"
         disabled={isSubmitting || globalLoading}
-        style={{
-          padding: "0.625rem",
-          background: (isSubmitting || globalLoading) ? "#9ca3af" : "#3b82f6",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          fontSize: "1rem",
-          fontWeight: 500,
-          cursor: (isSubmitting || globalLoading) ? "not-allowed" : "pointer",
-        }}
+        className="btn btn-primary"
+        style={{ width: '100%' }}
       >
         {isSubmitting ? "Adding Trip..." : "Add Trip"}
       </button>
