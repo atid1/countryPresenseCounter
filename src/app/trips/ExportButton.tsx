@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { useLoading } from "./LoadingContext";
 
-export default function ExportButton() {
+type ExportButtonProps = {
+  fullWidth?: boolean;
+  variant?: "primary" | "secondary";
+};
+
+export default function ExportButton({ fullWidth = true, variant = "primary" }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const { isLoading: globalLoading, setLoading } = useLoading();
 
@@ -51,8 +56,15 @@ export default function ExportButton() {
     <button
       onClick={handleExport}
       disabled={isExporting || globalLoading}
-      className="btn btn-primary"
-      style={{ width: '100%' }}
+      className={`btn ${variant === "secondary" ? "btn-secondary" : "btn-primary"}`}
+      style={{
+        width: fullWidth ? '100%' : 'auto',
+        minWidth: fullWidth ? undefined : '180px',
+        padding: fullWidth ? undefined : '0.75rem 1.25rem',
+        fontSize: '1rem',
+        borderWidth: variant === "secondary" ? '1px' : undefined
+      }}
+      aria-label="Export trips to CSV"
     >
       {isExporting ? 'Exporting...' : 'Export CSV'}
     </button>

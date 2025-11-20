@@ -42,7 +42,12 @@ export default function TripsPageClient({
     <LoadingProvider>
       <main>
         <div className="flex items-center justify-between mb-8">
-          <h1>Trips</h1>
+          <div>
+            <h1 style={{ fontSize: '2rem', marginBottom: '0.35rem' }}>Trips</h1>
+            <p className="text-muted" style={{ fontSize: '1rem' }}>
+              Add or import your travel days, then review and export the table below.
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -62,9 +67,20 @@ export default function TripsPageClient({
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-8 mb-12">
+        <section
+          className="grid"
+          style={{
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: '2.75rem',
+            alignItems: 'start',
+            marginBottom: '3rem'
+          }}
+        >
           <div className="card">
-            <h2 className="mb-4">Add Trip</h2>
+            <h2 className="mb-4" style={{ marginBottom: '0.35rem' }}>Add Trip</h2>
+            <p className="text-muted" style={{ fontSize: '1rem', marginBottom: '1rem' }}>
+              Enter a new stay with clear dates and notes. We will warn you if dates overlap.
+            </p>
             <AddTripForm
               prefillCountryCode={prefillCountryCode}
               prefillDateFrom={prefillDateFrom}
@@ -80,17 +96,33 @@ export default function TripsPageClient({
           </div>
 
           <div className="card">
-            <h2 className="mb-4">Import / Export</h2>
-            <div className="flex flex-col gap-4">
-              <ImportForm />
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                <ExportButton />
-              </div>
-            </div>
+            <h2 className="mb-4" style={{ marginBottom: '0.35rem' }}>Import from CSV</h2>
+            <p className="text-muted" style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>
+              Upload your saved CSV file. We will flag any row that needs attention before saving.
+            </p>
+            <ImportForm />
+            <p className="text-muted" style={{ fontSize: '0.95rem', marginTop: '0.75rem' }}>
+              Tip: export a copy first if you want a template for the columns.
+            </p>
           </div>
-        </div>
+        </section>
 
-        <TripsTable initialMetrics={metrics} />
+        <section style={{ marginBottom: '2rem' }}>
+          <div
+            className="flex items-center justify-between mb-4"
+            style={{ gap: '1rem', alignItems: 'center', flexWrap: 'wrap', marginBottom: '0.75rem' }}
+          >
+            <div>
+              <h2 style={{ marginBottom: '0.35rem' }}>Review &amp; Export</h2>
+              <p className="text-muted" style={{ fontSize: '1rem' }}>
+                Tap a row to edit or delete it. Export (optional) downloads exactly what you see in the table.
+              </p>
+            </div>
+            <ExportButton fullWidth={false} variant="secondary" />
+          </div>
+
+          <TripsTable initialMetrics={metrics} />
+        </section>
       </main>
     </LoadingProvider>
   );

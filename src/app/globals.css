@@ -1,54 +1,46 @@
 :root {
-  /* Dark Theme - Vibrant Color Palette */
-  --primary: #60a5fa;
-  --primary-hover: #3b82f6;
-  --primary-light: #1e3a8a;
-  --primary-dark: #1e40af;
+  /* High-contrast, color-blind friendly palette */
+  --primary: #2d6cdf;
+  --primary-hover: #1f4fbf;
+  --primary-light: #1c2f5a;
+  --primary-dark: #102449;
 
-  --secondary: #a78bfa;
-  --secondary-hover: #8b5cf6;
-  --secondary-light: #4c1d95;
+  --secondary: #6c7a91;
+  --secondary-hover: #55637e;
+  --secondary-light: #2b3242;
 
-  --accent: #22d3ee;
-  --accent-hover: #06b6d4;
-  --accent-light: #164e63;
+  --accent: #1fb5a7;
+  --accent-hover: #169688;
+  --accent-light: #0c4a4a;
 
-  --success: #34d399;
-  --success-hover: #10b981;
-  --success-light: #064e3b;
+  --success: #2dc26b;
+  --success-hover: #209b55;
+  --success-light: #0f3b1f;
 
-  --warning: #fbbf24;
-  --warning-hover: #f59e0b;
-  --warning-light: #78350f;
+  --warning: #f59e0b;
+  --warning-hover: #d97706;
+  --warning-light: #7a4100;
 
-  --danger: #f87171;
-  --danger-hover: #ef4444;
-  --danger-light: #7f1d1d;
-
-  --pink: #f472b6;
-  --pink-hover: #ec4899;
-  --pink-light: #831843;
-
-  --orange: #fb923c;
-  --orange-hover: #f97316;
-  --orange-light: #7c2d12;
+  --danger: #d92d20;
+  --danger-hover: #b42318;
+  --danger-light: #5b1b19;
 
   /* Dark Theme Backgrounds */
-  --background: #0f172a;
-  --background-elevated: #1e293b;
-  --surface: #1e293b;
-  --surface-elevated: #334155;
-  --surface-hover: #475569;
+  --background: #0d141f;
+  --background-elevated: #131d2b;
+  --surface: #182234;
+  --surface-elevated: #202c42;
+  --surface-hover: #27354c;
 
   /* Dark Theme Text */
-  --text-main: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-main: #f8fafc;
+  --text-secondary: #dbe1eb;
+  --text-muted: #9aa7bd;
 
   /* Dark Theme Borders */
-  --border: #334155;
-  --border-hover: #475569;
-  --border-focus: #60a5fa;
+  --border: #324563;
+  --border-hover: #4a678f;
+  --border-focus: #7fb3ff;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -82,6 +74,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--background);
   color: var(--text-main);
+  font-size: 17px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
@@ -126,7 +119,7 @@ a {
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid transparent;
@@ -147,9 +140,10 @@ a {
 }
 
 .btn-secondary {
-  background: var(--surface-elevated);
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
   border-color: var(--border);
-  color: var(--text-secondary);
+  color: var(--text-main);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -182,13 +176,21 @@ a {
   cursor: not-allowed;
 }
 
+.btn:focus-visible,
+.input:focus-visible,
+.select:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
 .input-group {
   margin-bottom: var(--space-4);
 }
 
 .label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--text-secondary);
   margin-bottom: var(--space-1);
@@ -197,10 +199,10 @@ a {
 .input,
 .select {
   width: 100%;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  font-size: 1rem;
   transition: all 0.2s;
   background: var(--surface-elevated);
   color: var(--text-main);
@@ -309,6 +311,10 @@ h3 {
   margin-bottom: var(--space-8);
 }
 
+.mb-12 {
+  margin-bottom: var(--space-12);
+}
+
 .flex {
   display: flex;
 }
@@ -356,7 +362,7 @@ h3 {
   background: linear-gradient(135deg, var(--surface-elevated) 0%, var(--surface-hover) 100%);
   padding: var(--space-3) var(--space-4);
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-secondary);
@@ -366,7 +372,7 @@ h3 {
 .table td {
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border);
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--text-main);
 }
 
@@ -389,6 +395,8 @@ h3 {
 }
 
 .badge-red {
-  background: var(--danger-light);
-  color: var(--danger);
+  background: linear-gradient(135deg, var(--danger-light) 0%, rgba(255,255,255,0.05) 100%);
+  color: var(--text-main);
+  border: 1px dashed var(--danger-hover);
+  letter-spacing: 0.01em;
 }
